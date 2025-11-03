@@ -125,7 +125,7 @@
 
     // --- COMPONENTS/ICONS.TSX ---
     const CoveboLogo = (props) => React.createElement('img', { 
-        src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaEAAAAyCAYAAADy/yR/AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAdOSURBVHhe7Z1/aBxlHcfPdybJSTub5Jyc7GSSM5Kck5zcJJvkJCc5STubnJPc5CS7SW6St5/vO/N4ntd115e7/L7P7/P5/H1dn31d1/Vz/qysra1tLVu2bNm0adOmxYsX28n27dt39erVd/3116+srOzr67vrrrvuueeeu3nz5oULF95///2DBw/esWPHbdu2LV++fP/999+yZcvu3bt348aNL7/88sKFC21ZWVn51VdfHTp06Pbt26+99tqZM2du2bJl06ZNTzzxxF//+td/+ctfHn/88bZu3frEE098991333nnnZaWlkePHv3JT37y+OOP/9Of/vTBBx88cODAsWPH/vCHP9yyZcu+ffu+++67/dM///M/N27cuHz58o8++ujDDz+8e/fuOXPmFBQU3L17d0FBwe7du1tbWzds2DD/kF/4whfWr18/duzYuXPn9vT0/OIXv7h58+Y777zz/fffv23bthEjRly+fHny5Mljx45dt27dqVOnHnjggW+++eazzz574MCBV155Ze3atVu2bNmwYcPu3btXVFScOnXq5s2bd+zYceDAgRUrVhw9evT48eNbt27dsWPHuXPnbtq0adOmTQcPHty1a9fRo0c//fTTf/zjHx944IE9e/acO3dux44d33///bZt2z7++ONffvnlzz///Icffnj58uWNGze+//777777tChQ+PHj/9P//RPmzZtOvfcc2/fvv3NN998//33J0+ePHbs2Pnz5w8cOPCBBx7405/+tGPHjiFDhvyf//N/jh07dsuWLf/0T//02muvvfLKK0eOHPnJT35y8eLFzz777Lvvvrty5cof/OAH33vvvTt37ty/f//SpUsXL158/PjxR48eXb58+bvvvnv16tXff//9nj17bt68+d577/31r3+9bdu2P/zhDzdt2vS3v/3tsmXLtmyZ719++eVXXnnlG9/4xrZt2+b/+eef99xzzyuvvHL37t1vv/322rVr9+zZ88EHH9yyZct33333r3/963nz5n344YebN2/+5je/+fnPf/6LX/zin/70p5999tnly5evWrVq3bp1P/7xj//5n//5559/3rdv34ULFw4cOHDr1q0NGzYsWLDgX//617p1677++uvvvvvu0KFDP/vZz5YuXXrHHXccOnRo8ODBN99884YNG+b/+te/fvOb3/zGN75x9+7df/7zn//xH/9x8uTJR48evXDhwpkzZ375y19++OGHDxw4cM+ePXv27Pn666+/8cYb77333tChQ7/85S+fe+65v/nNb3788cdnzpz5yU9+8vPPPx8/fvyzzz67dOnSL3/5yzfffPPSpUtnz549f/7822+//bvf/e43v/nN//d//7f/8A//0Lhx42nTpt21a9eRI0f+8pe/nDhx4rRp00aOHHnHHXfs2bPnww8/PHXq1LvuuutP//rXXbt2Pfjggw8//PDbb7/98ssv//a3vx05cuS3vvWtv/zlL//yL/9y/fr1a9euffjhh7dt27Z58+Zbbrll//79x44dW7NmzYIFC/7u7/7uj3/849WrV3/wgx/8xS9+8Ytf/OKmTZueffbZX/7ylx07dtyyZcs//elPP/3004EDB/72t7+9evXqj3/84zfffPPzzz+/cuXK5cuX7969e/v27YEDB65fv37z5s2jR49ev379hAkTtm3bNmnSpGHDhn377bd/+MMfHj9+fNeuXR9//PGTJ0++66679u3bt3DhwmXLlh06dOj8+fOffPLJ77//fmjQoGHDhsmTJy9durRt27bbbrt98sknr169enDgwPr161euXLly5cqnn376t7/97T//+c8HDx585ZVXvv/++3PmzPnBD37w1VdfHT58+N69e/ft27dv375FixadOnXq4MGD9+7dW7ly5ffff3/lypWtW7f+4Q9/+I1v/H/l/1+eO3dunnQvVlxcPHDgQPn5+d9///179+6tqKi4ePFiYWGhnJycf/vb327dupWU/G9/+9sbb7wxfPjwkJAQe++99/HjxyUnJ3/88cdp06bNnj1bWVnZtGnTJkyYsG/fPl1d3bZt24YMGTJw4MB9+/YdPnz46dOnv/71rz/++OPp6ekNGza8evXql7/8ZUdHx5IlS8aMGbN3796ffvppSUlJ77777p133lmxYsXw4cOffvrpLVu27Ny5c82aNWPGjNmwYcNbb701duzYoUOHPvnkk0OHDv3zn//89a9/3bdv3/Hjxw8ePJifn5+fn3/bbbesWLFixYpVq1ZdtGjRvn379u/f/+DBgwULFly5cuXrr7/+0ksvDRkyZP369du2bVtUVLRv3z7/X7Ro0bx58zZv3nz69OlXXnnlo48+6u/v//bbbxcuXLhw4cKxY8cuXrx4wIABdevWbdiwYdy4caNHj37xxRfjx49/6623Xnrppdu3b69cubJ9+/Y777zz8ssvT09PX7Vq1VtvvbVhwwb/f++996ZNm7Zt27Zz584VK1b8+OOPBw8evHXr1qxZs4YNG7Zx48ZFixbNmTPnnnvuOeWVV1500UVfffXVhISE1atXnzx58sKFC2vXrln7lP8B3tA+C/U9p7W0tKSlpbW3t6elpZWWllZQUFBSUlJSUrJ58+b+/v729nZZWXnkyJGWlpajR4/W19dXV1dXVFSUlJScPHly7dq1JSUlKSkpCQkJiYmJO3fu3LVrV15eXkJCQlpaWk5OzsKFCyUlJbW1tfn5+d9///2goKCgoKCpqam2traioqKurq6pqamkpOTcuXNnz549f/78uXPnbt26dWJi4tixYxEREQUFBfn5+SUlJc3NzR0dHVFRUX19fV1dXVVVVXZ2dklJyZYtW86ePVtfX19TU3P+/Plnz54lJSUFBQV1dXV5efnFixcvXLhw+fLly5cvz8nJ6ejoGBwcPGrUqFmzZtWqVUuWLFmxYsWCBQuWLl2aNm3axIkTFy1a9MADD0ydOnXkyJEJCQkFBQVVVVVXV1ddXd2KFSsGBgbu3r1bV1c3ZMiQMWPGzJgxY/z48YcOHXrzzTdXr15tPzt48OD8+fPnz58/depUXV3dG2+8sXbt2oYNG1auXLl27drRo0cPHjx49erVoUOH/vjHP37rrbeeeOKJv//970tLSzds2DBixIgxY8YcOnRo2LBhQ4cOLSoqOnfunP+LioqOHj26Z8+effv2HTp0aNeuXQ8++GAgIHDFihUXL17+z//8T0ZGxtChQ7/44ovBwcHbtm175ZVXBgYGbty4ceTIkdHR0QcPHjz//PMHDx783nvvHTlyZMiQIQkJCRkZGQkJCXPmzLlr167Fixd/+umnb775ZuPGjQsWLAwODu7fvz8gIGA1a1bty/xG2o+c95zO+vXr58yZs2vXrqtXr37vvfceeeSRe+6559FHH71+/foRI0YcOHBg4cKFe/furaysnDVr1qZNmz755JOFCxdu2rTp1KlTv/rVr2bNmnXnnXdu3Lixq6vr5ZdfHhAQ0N3dPWnSpGXLlj3zzDPPPPNMQUHBnj171q9fv3HjxpUrV77xxhuvv/56R0dHSUnJyZMnP/744/Pnz7927dqlS5fGjh17xRVX9OvX7+OPPx4yZMjHH388ZsyYNWvWfOtb39q1a9cbb7yxc+fOWbNmXbx48eLFi0+ePHnixIlLly5dsGDBmjVrNmzYsGHDBkOHDh03btyqVasWL16ck5PT09OzZ8+ePn36/Pnza2pq+vbtGxoaysrKys7O3r9/f15eXkZGxsKFC19++eUnn3wycuTI+fPn58yZs3v37oKCglevXu3p6blx48b8/PwLFy4MHjxo4K7fH58jY05F55zOysrK06dPV6xYsXPnzg8++ODu3buZmZklJSWXLl1avXp1ZWVlc3PznXfe2b9//0GDBiUnJzc1NTV1dVU3mOXLly9dujQoKCi3vG/evFlZWXnrrbe2b98+cuTIuXPnLl++fPz48ePHjx89erQd77Zt24oVK956660VK1Zs2bJlzZo1d9xxxyuvvPKZZ56ZPn36V1999eKLL6akpPTu3fvLL788duzYvn37Nm3atG/fvnPnzl25cmXFihVbtmzp37//rVu3JkyY0NDQsG3btj179txyyy0LFy78/e9/nzlz5qxZs5599tlatWr9/ve/T5w4UVRUVFNTU1JSsmnTJt/8J3QGf8V5z+mMHDlyyZIljzzyyNWrVxctWvSBBx5YunTpySefnJyc/Oijj6ZPnz5ixIjFixfv2LFj8ODBN9100y9/+ctvvfXWtGnTvva1rx04cGCXLl2GDx9+5pln/v73v//FL34xatSoOXPmHD169LXXXnvttdc+/PDD4cOHd3R0fPXVVz/99NP/+I//GDx48EcffXTjjTfOmjVr5syZa9asWbhw4dq1a3///fdLlizZuXNnQ0PDwYMHl5aWbtmyZceOHe+//35xcXFXV1dlZWVBQcHKlSsXLly4YMGCxYsXz58//+uvv27evPnBBx8MHDhw//79W7Zs2bFjx549e+bNm3f58uVTp0699tprJ0+efOONN1avXl1XV3f//v179uypq6urqamx+96c857TWVhYOHz4cGNjY1NT05s3b54+fVpSUtLW1tbW1ubn5z/++OMNGza8/PLLS5cuHT58+NixY3PmzBk/fnx3d3dfX9+ePXsOHDiwfft2VVXVRx99tGzZsjlz5ty7d29NTc3SpUsfeeSRpKQkc3Pze++9N23atEWLFu3du7ehocGn6V26dGnlypXTp08/fvx4f3//wsLC+fPnr169+vLly5WVlQULFiQkJLS1tbW0tOTl5f3nP//59NNPp6enX3nllTfeeOPChQsHDx5saGiYOXPmHTt2FBQUDBo0qKCgoK6ubt++ffPmzbtz587Zs2f/+c9/vvHGG0eOHHnrrbeeO3fuzZs3T5kyZfv27Vu3bl1YWNjV1XXkyJHvv/9+SEjIfXfdH3Eecj5gAAAAAElFTkSuQmCC",
+        src: "logo-covebo.png", // Odwołanie do pliku
         alt: "Covebo Agencja Zatrudnienia",
         ...props
     });
@@ -142,7 +142,7 @@
     );
 
     const ScannerIcon = (props) => React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
-        React.createElement('path', { d: "M5.5 4.75a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v14.5a1 1 0 0 1-1-1h-11a1 1 0 0 1-1-1Z" }),
+        React.createElement('path', { d: "M5.5 4.75a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v14.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1Z" }),
         React.createElement('path', { d: "M8.5 8.75h7" }),
         React.createElement('path', { d: "M8.5 12.75h4" }),
         React.createElement('path', { d: "M21.25 10.75a4.5 4.5 0 0 0 0 3" })
@@ -156,7 +156,10 @@
       return React.createElement('div', { id: id, className: "bg-white text-black w-[210mm] h-[297mm] shadow-2xl flex flex-col", style: { fontFamily: "'Poppins', sans-serif" } },
         React.createElement('header', { className: "bg-[#E31D2A] md:rounded-br-[60px] pt-8 pb-28 md:pt-8 md:pb-8 md:pl-10 text-white relative md:h-[200px]" },
           React.createElement('div', { className: "flex flex-col md:flex-row items-center md:items-start text-center md:text-left" },
-            React.createElement('div', { className: "w-full mt-4 md:mt-0 flex flex-col md:flex-row justify-center md:justify-between items-center" },
+            React.createElement('div', { className: "w-full md:w-1/3" },
+              React.createElement(CoveboLogo, { className: "h-12 mx-auto md:mx-0 w-auto" })
+            ),
+            React.createElement('div', { className: "w-full md:w-2/3 mt-4 md:mt-0 md:pl-12 flex flex-col md:flex-row justify-center md:justify-between items-center" },
               React.createElement('div', { className: "text-center md:text-left" },
                 React.createElement('h1', { className: "text-4xl md:text-5xl font-bold leading-tight tracking-wide break-words" }, name || 'Imię i Nazwisko'),
                 dob && React.createElement('p', { className: "text-sm md:text-base font-light mt-2 tracking-wide opacity-90" }, dob)
@@ -177,7 +180,7 @@
         ),
         React.createElement('main', { className: "flex flex-col md:flex-row pt-32 md:pt-24 flex-grow" },
           React.createElement('div', { className: "w-full md:w-[38%] p-6 md:pl-10 md:pr-6 md:pb-8 order-2 md:order-1" },
-            React.createElement('div', { className: "bg-gray-100 p-6 flex flex-col h-full" },
+            React.createElement('div', { className: "bg-gray-100 p-6 h-full" },
                 React.createElement('div', null,
                   personalDetails && personalDetails.length > 0 && React.createElement('div', { className: "mb-6" },
                     React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Uprawnienia"),
@@ -197,32 +200,36 @@
                       languages.map(language => React.createElement('p', { key: language.id, className: "text-sm text-black font-normal break-words" }, language.text))
                     )
                   )
-                ),
-                React.createElement('div', { className: 'mt-auto pt-6 flex justify-end' },
-                    React.createElement(CoveboLogo, {
-                        className: "h-10 w-auto"
-                    })
                 )
             )
           ),
-          React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2" },
-            workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
-              React.createElement(SectionTitle, null, "Work Experience"),
-              workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-4 p-4 bg-gray-100 rounded" },
-                React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${exp.jobTitle}, ${exp.company}`),
-                React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, exp.dateRange),
-                React.createElement('ul', { className: "list-disc pl-5 text-xs space-y-1" },
-                  exp.tasks.map(task => React.createElement('li', { key: task.id, className: "break-words font-semibold" }, task.text))
+          React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2 flex flex-col" },
+            React.createElement('div', null,
+                workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
+                React.createElement(SectionTitle, null, "Work Experience"),
+                workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-4 p-4 bg-gray-100 rounded" },
+                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${exp.jobTitle}, ${exp.company}`),
+                    React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, exp.dateRange),
+                    React.createElement('ul', { className: "list-disc pl-5 text-xs space-y-1" },
+                    exp.tasks.map(task => React.createElement('li', { key: task.id, className: "break-words font-semibold" }, task.text))
+                    )
+                ))
+                ),
+                education && education.length > 0 && React.createElement('div', { className: "mt-8" },
+                React.createElement(SectionTitle, null, "Education"),
+                education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-4 p-4 bg-gray-100 rounded" },
+                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${edu.degree}, ${edu.schoolName}`),
+                    React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, edu.dateRange),
+                    edu.description && React.createElement('p', { className: "text-xs mt-1 break-words font-semibold" }, edu.description)
+                ))
                 )
-              ))
             ),
-            education && education.length > 0 && React.createElement('div', { className: "mt-8" },
-              React.createElement(SectionTitle, null, "Education"),
-              education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-4 p-4 bg-gray-100 rounded" },
-                React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${edu.degree}, ${edu.schoolName}`),
-                React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, edu.dateRange),
-                edu.description && React.createElement('p', { className: "text-xs mt-1 break-words font-semibold" }, edu.description)
-              ))
+            React.createElement('div', { className: 'mt-auto pt-6 flex justify-end' },
+                React.createElement('img', {
+                    src: "logo-covebo-icon.png",
+                    alt: "Covebo Icon",
+                    className: "w-16 h-16"
+                })
             )
           )
         )

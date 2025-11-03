@@ -197,34 +197,32 @@
                       languages.map(language => React.createElement('p', { key: language.id, className: "text-sm text-black font-normal break-words" }, language.text))
                     )
                   )
+                ),
+                React.createElement('div', { className: 'mt-auto pt-6 flex justify-end' },
+                    React.createElement(CoveboLogo, {
+                        className: "h-10 w-auto"
+                    })
                 )
             )
           ),
-          React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2 flex flex-col" },
-            React.createElement('div', { className: "flex-grow" },
-                workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
-                React.createElement(SectionTitle, null, "Work Experience"),
-                workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-4 p-4 bg-gray-100 rounded" },
-                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${exp.jobTitle}, ${exp.company}`),
-                    React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, exp.dateRange),
-                    React.createElement('ul', { className: "list-disc pl-5 text-xs space-y-1" },
-                    exp.tasks.map(task => React.createElement('li', { key: task.id, className: "break-words font-semibold" }, task.text))
-                    )
-                ))
-                ),
-                education && education.length > 0 && React.createElement('div', { className: "mt-8" },
-                React.createElement(SectionTitle, null, "Education"),
-                education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-4 p-4 bg-gray-100 rounded" },
-                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${edu.degree}, ${edu.schoolName}`),
-                    React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, edu.dateRange),
-                    edu.description && React.createElement('p', { className: "text-xs mt-1 break-words font-semibold" }, edu.description)
-                ))
+          React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2" },
+            workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
+              React.createElement(SectionTitle, null, "Work Experience"),
+              workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-4 p-4 bg-gray-100 rounded" },
+                React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${exp.jobTitle}, ${exp.company}`),
+                React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, exp.dateRange),
+                React.createElement('ul', { className: "list-disc pl-5 text-xs space-y-1" },
+                  exp.tasks.map(task => React.createElement('li', { key: task.id, className: "break-words font-semibold" }, task.text))
                 )
+              ))
             ),
-            React.createElement('div', { className: 'mt-auto pt-6 flex justify-end' },
-                React.createElement(CoveboLogo, {
-                    className: "h-10 w-auto"
-                })
+            education && education.length > 0 && React.createElement('div', { className: "mt-8" },
+              React.createElement(SectionTitle, null, "Education"),
+              education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-4 p-4 bg-gray-100 rounded" },
+                React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${edu.degree}, ${edu.schoolName}`),
+                React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, edu.dateRange),
+                edu.description && React.createElement('p', { className: "text-xs mt-1 break-words font-semibold" }, edu.description)
+              ))
             )
           )
         )

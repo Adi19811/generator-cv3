@@ -11,45 +11,47 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
   <style>
-    /* Ustawienie czcionki dla całego dokumentu */
     body { font-family: 'Poppins', sans-serif; }
-    /* Niestandardowy pasek przewijania */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #555; }
-  </style>
-
-  <script type="importmap">
-  {
-    "imports": {
-      "react": "https://esm.sh/react@18.2.0",
-      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
+     /* Ukrycie podglądu CV na telefonach, gdy aktywny jest formularz */
+    @media (max-width: 768px) {
+        .mobile-view-form #cv-preview-container {
+            display: none;
+        }
+        .mobile-view-preview #cv-form-container {
+            display: none;
+        }
     }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
   }
-  </script>
+}
+</script>
 </head>
-<body>
+<body class="bg-gray-100">
   <div id="root"></div>
-
   <script type="module">
-    import React, { useState } from 'react';
+    import React, { useState, useEffect } from 'react';
     import ReactDOM from 'react-dom/client';
 
-    // FUNKCJA POMOCNICZA DO GENEROWANIA UNIKALNEGO ID
+    // --- UTILS ---
     const generateUniqueId = () => new Date().getTime().toString() + Math.random().toString(36).substring(2, 9);
 
-    // --- services/pdfGenerator.ts ---
-    // Funkcja pomocnicza do generowania canvas z elementu
+    // --- SERVICES/PDFGENERATOR.TS ---
     const generateCanvas = async (elementId) => {
       const originalElement = document.getElementById(elementId);
       if (!originalElement) {
         throw new Error(`Element with id "${elementId}" not found.`);
       }
 
-      // Klonowanie elementu do druku w celu zachowania układu A4
       const clone = originalElement.cloneNode(true);
       clone.style.position = 'absolute';
       clone.style.top = '0';
@@ -60,7 +62,7 @@
       document.body.appendChild(clone);
 
       try {
-        const canvas = await html2canvas(clone, {
+        const canvas = await window.html2canvas(clone, {
           scale: 3,
           useCORS: true,
           logging: false,
@@ -76,10 +78,8 @@
       }
     };
 
-    // Funkcja generująca PDF i pobierająca go
     const generatePdf = async (elementId) => {
       const { canvas, clone } = await generateCanvas(elementId);
-      
       try {
         const imgData = canvas.toDataURL('image/png');
         const { jsPDF } = window.jspdf;
@@ -88,7 +88,6 @@
           unit: 'mm',
           format: 'a4'
         });
-
         const a4Width = 210;
         const a4Height = 297;
         pdf.addImage(imgData, 'PNG', 0, 0, a4Width, a4Height);
@@ -101,10 +100,8 @@
       }
     };
 
-    // Funkcja generująca PDF jako blob (do udostępniania)
     const generatePdfBlob = async (elementId, filename = 'cv.pdf') => {
       const { canvas, clone } = await generateCanvas(elementId);
-      
       try {
         const imgData = canvas.toDataURL('image/png');
         const { jsPDF } = window.jspdf;
@@ -113,14 +110,11 @@
           unit: 'mm',
           format: 'a4'
         });
-
         const a4Width = 210;
         const a4Height = 297;
         pdf.addImage(imgData, 'PNG', 0, 0, a4Width, a4Height);
-        
         const blob = pdf.output('blob');
-        const file = new File([blob], filename, { type: 'application/pdf' });
-        return file;
+        return new File([blob], filename, { type: 'application/pdf' });
       } catch (error) {
         console.error("PDF blob generation failed", error);
         throw error;
@@ -129,16 +123,14 @@
       }
     };
 
-    // --- components/icons.tsx (Niezmienione ikony) ---
-    const CoveboLogo = (props) => (
-      React.createElement('svg', { viewBox: "0 0 200 40", xmlns: "http://www.w3.org/2000/svg", ...props },
-        React.createElement('path', { fill: "currentColor", d: "M22.5,0.5 C10.4,0.5 0.5,10.4 0.5,22.5 L0.5,22.5 L0.5,29.5 L22.5,29.5 C26.4,29.5 29.5,26.4 29.5,22.5 L29.5,22.5 C29.5,10.4 19.6,0.5 7.5,0.5 L22.5,0.5 Z M22.5,10.5 C15.9,10.5 10.5,15.9 10.5,22.5 C10.5,22.5 10.5,22.5 10.5,22.5 L22.5,22.5 L22.5,10.5 Z" }),
-        React.createElement('text', { x: "45", y: "29", fontFamily: "Poppins, sans-serif", fontSize: "30", fontWeight: "bold", fill: "#333" }, "COVEBO")
-      )
-    );
+    // --- COMPONENTS/ICONS.TSX ---
+    const CoveboLogo = (props) => React.createElement('img', { 
+        src: "logo-covebo.png", // Odwołanie do pliku
+        alt: "Covebo Agencja Zatrudnienia",
+        ...props
+    });
 
-    const ConveyorIcon = (props) => (
-      React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+    const ConveyorIcon = (props) => React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
         React.createElement('path', { d: "M10.25 2.75a2.5 2.5 0 0 0-4.5 0" }),
         React.createElement('path', { d: "M7.5 2.75v12.5" }),
         React.createElement('path', { d: "m18 15.25-2.5-2.5" }),
@@ -147,154 +139,119 @@
         React.createElement('path', { d: "m10.5 15.25 2.5-2.5" }),
         React.createElement('path', { d: "M12.25 21.25h-9a1 1 0 0 1-1-1v-4.5a1 1 0 0 1 1-1h13.5a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-2.25" }),
         React.createElement('circle', { cx: "18", cy: "18", r: "3.25" })
-      )
     );
 
-    const ScannerIcon = (props) => (
-      React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+    const ScannerIcon = (props) => React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
         React.createElement('path', { d: "M5.5 4.75a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v14.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1Z" }),
         React.createElement('path', { d: "M8.5 8.75h7" }),
         React.createElement('path', { d: "M8.5 12.75h4" }),
         React.createElement('path', { d: "M21.25 10.75a4.5 4.5 0 0 0 0 3" })
-      )
     );
 
-    // --- components/CvPreview.tsx (Zmodyfikowane pobieranie tekstu zadań) ---
+    // --- COMPONENTS/CVPREVIEW.TSX ---
+    const SectionTitle = ({ children }) => React.createElement('h2', { className: "text-[#E31D2A] text-lg tracking-[0.3em] font-semibold mb-6 uppercase" }, children);
+
     const CvPreview = ({ cvData, id }) => {
       const { name, profilePictureUrl, dob, personalDetails, skills, languages, workExperience, education } = cvData;
-
-      const SectionTitle = ({ children }) => (
-        React.createElement('h2', { className: "text-[#CE0031] text-lg tracking-[0.3em] font-semibold mb-6" }, children)
-      );
-
-      return (
-        React.createElement('div', {
-          id: id,
-          className: "bg-white text-black w-full md:w-[210mm] min-h-screen md:min-h-[297mm] md:shadow-2xl",
-          style: { fontFamily: "'Poppins', sans-serif" }
-        },
-          React.createElement('header', { className: "bg-[#CE0031] md:rounded-br-[60px] pt-8 pb-28 md:pt-8 md:pb-8 md:pl-10 text-white relative md:h-[200px]" },
-            React.createElement('div', { className: "flex flex-col md:flex-row items-center md:items-start text-center md:text-left" },
-              React.createElement('div', { className: "w-full md:w-1/3" },
-                React.createElement(CoveboLogo, { className: "h-8 mx-auto md:mx-0 w-auto fill-current" })
+      return React.createElement('div', { id: id, className: "bg-white text-black w-[210mm] h-[297mm] shadow-2xl flex flex-col", style: { fontFamily: "'Poppins', sans-serif" } },
+        React.createElement('header', { className: "bg-[#E31D2A] md:rounded-br-[60px] pt-8 pb-28 md:pt-8 md:pb-8 md:pl-10 text-white relative md:h-[200px]" },
+          React.createElement('div', { className: "flex flex-col md:flex-row items-center md:items-start text-center md:text-left" },
+            React.createElement('div', { className: "w-full md:w-1/3" },
+              React.createElement(CoveboLogo, { className: "h-12 mx-auto md:mx-0 w-auto" })
+            ),
+            React.createElement('div', { className: "w-full md:w-2/3 mt-4 md:mt-0 md:pl-12 flex flex-col md:flex-row justify-center md:justify-between items-center" },
+              React.createElement('div', { className: "text-center md:text-left" },
+                React.createElement('h1', { className: "text-4xl md:text-5xl font-bold leading-tight tracking-wide break-words" }, name || 'Imię i Nazwisko'),
+                dob && React.createElement('p', { className: "text-sm md:text-base font-light mt-2 tracking-wide opacity-90" }, dob)
               ),
-              React.createElement('div', { className: "w-full md:w-2/3 mt-4 md:mt-0 md:pl-12 flex flex-col md:flex-row justify-center md:justify-between items-center" },
-                React.createElement('div', { className: "text-center md:text-left" },
-                  React.createElement('h1', { className: "text-4xl md:text-5xl font-bold leading-tight tracking-wide break-words" }, name),
-                  dob && React.createElement('p', { className: "text-sm md:text-base font-light mt-2 tracking-wide opacity-90" }, dob)
+              React.createElement('div', { className: "flex flex-row md:flex-col gap-3 mt-4 md:mt-0" },
+                React.createElement('div', { className: "w-16 h-16 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50 shrink-0" },
+                  React.createElement(ConveyorIcon, { className: "w-8 h-8" })
                 ),
-                React.createElement('div', { className: "flex flex-row md:flex-col gap-3 mt-4 md:mt-0" },
-                  React.createElement('div', { className: "w-16 h-16 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50 shrink-0" },
-                    React.createElement(ConveyorIcon, { className: "w-8 h-8" })
-                  ),
-                  React.createElement('div', { className: "w-16 h-16 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50 shrink-0" },
-                    React.createElement(ScannerIcon, { className: "w-8 h-8" })
-                  )
+                React.createElement('div', { className: "w-16 h-16 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50 shrink-0" },
+                  React.createElement(ScannerIcon, { className: "w-8 h-8" })
                 )
               )
-            ),
-            React.createElement('div', { className: "absolute top-[120px] md:top-[80px] left-1/2 md:left-10 transform -translate-x-1/2 md:translate-x-0 w-[180px] h-[180px] rounded-full bg-white p-2 shadow-lg" },
-              React.createElement('img', {
-                src: profilePictureUrl || 'attached_assets/generated_images/Professional_CV_logo_placeholder_9830adf7.png',
-                alt: name,
-                className: "w-full h-full rounded-full object-cover"
-              })
             )
           ),
-
-          React.createElement('main', { className: "flex flex-col md:flex-row pt-32 md:pt-24" },
-            React.createElement('div', { className: "w-full md:w-[38%] p-6 md:pl-10 md:pr-6 md:pb-8 order-2 md:order-1" },
-              React.createElement('div', { className: "bg-gray-100 p-6 min-h-[400px]" },
-                personalDetails && personalDetails.length > 0 && (
-                  React.createElement('div', { className: "mb-6" },
-                    React.createElement('h3', { className: "text-[#CE0031] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Uprawnienia"),
+          React.createElement('div', { className: "absolute top-[120px] md:top-[80px] left-1/2 md:left-10 transform -translate-x-1/2 md:translate-x-0 w-[180px] h-[180px] rounded-full bg-white p-2 shadow-lg" },
+            React.createElement('img', { src: profilePictureUrl || `https://picsum.photos/seed/${name || 'placeholder'}/180`, alt: name, className: "w-full h-full rounded-full object-cover" })
+          )
+        ),
+        React.createElement('main', { className: "flex flex-col md:flex-row pt-32 md:pt-24 flex-grow" },
+          React.createElement('div', { className: "w-full md:w-[38%] p-6 md:pl-10 md:pr-6 md:pb-8 order-2 md:order-1" },
+            React.createElement('div', { className: "bg-gray-100 p-6 flex flex-col h-full" },
+                React.createElement('div', null,
+                  personalDetails && personalDetails.length > 0 && React.createElement('div', { className: "mb-6" },
+                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Uprawnienia"),
                     React.createElement('div', { className: "space-y-1" },
-                      personalDetails.map(detail => (
-                        React.createElement('p', { key: detail.id, className: "text-sm text-black font-normal break-words" }, detail.text)
-                      ))
+                      personalDetails.map(detail => React.createElement('p', { key: detail.id, className: "text-sm text-black font-normal break-words" }, detail.text))
+                    )
+                  ),
+                  skills && skills.length > 0 && React.createElement('div', { className: "mb-6" },
+                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Dodatkowe umiejętności"),
+                    React.createElement('div', { className: "space-y-1" },
+                      skills.map(skill => React.createElement('p', { key: skill.id, className: "text-sm text-black font-normal break-words" }, skill.text))
+                    )
+                  ),
+                  languages && languages.length > 0 && React.createElement('div', null,
+                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Znajomość języków obcych"),
+                    React.createElement('div', { className: "space-y-1" },
+                      languages.map(language => React.createElement('p', { key: language.id, className: "text-sm text-black font-normal break-words" }, language.text))
                     )
                   )
                 ),
-
-                skills && skills.length > 0 && (
-                  React.createElement('div', { className: "mb-6" },
-                    React.createElement('h3', { className: "text-[#CE0031] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Dodatkowe umiejętności"),
-                    React.createElement('div', { className: "space-y-1" },
-                      skills.map(skill => (
-                        React.createElement('p', { key: skill.id, className: "text-sm text-black font-normal break-words" }, skill.text)
-                      ))
-                    )
-                  )
-                ),
-
-                languages && languages.length > 0 && (
-                  React.createElement('div', null,
-                    React.createElement('h3', { className: "text-[#CE0031] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Znajomość języków obcych"),
-                    React.createElement('div', { className: "space-y-1" },
-                      languages.map(language => (
-                        React.createElement('p', { key: language.id, className: "text-sm text-black font-normal break-words" }, language.text)
-                      ))
-                    )
-                  )
+                React.createElement('div', { className: 'mt-auto pt-6' },
+                    React.createElement('img', {
+                        src: "logo-covebo-icon.png", // Odwołanie do pliku
+                        alt: "Covebo Icon",
+                        className: "w-16 h-16"
+                    })
                 )
-              )
+            )
+          ),
+          React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2" },
+            workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
+              React.createElement(SectionTitle, null, "Work Experience"),
+              workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-4 p-4 bg-gray-100 rounded" },
+                React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${exp.jobTitle}, ${exp.company}`),
+                React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, exp.dateRange),
+                React.createElement('ul', { className: "list-disc pl-5 text-xs space-y-1" },
+                  exp.tasks.map(task => React.createElement('li', { key: task.id, className: "break-words font-semibold" }, task.text))
+                )
+              ))
             ),
-
-            React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2" },
-              React.createElement(SectionTitle, null, "WORK EXPERIENCE"),
-              workExperience.map((exp) => (
-                React.createElement('div', { key: exp.id, className: "mb-4 p-4 bg-gray-100 rounded" },
-                  React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${exp.jobTitle}, ${exp.company}`),
-                  React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, exp.dateRange),
-                  React.createElement('ul', { className: "list-disc pl-5 text-xs space-y-1" },
-                    exp.tasks.map((task, i) => (
-                      React.createElement('li', { key: task.id || i, className: "break-words font-semibold" }, task.text)
-                    ))
-                  )
-                )
-              )),
-
-              education && education.length > 0 && (
-                React.createElement('div', { className: "mt-8" },
-                  React.createElement(SectionTitle, null, "EDUCATION"),
-                  education.map((edu) => (
-                    React.createElement('div', { key: edu.id, className: "mb-4 p-4 bg-gray-100 rounded" },
-                      React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${edu.degree}, ${edu.schoolName}`),
-                      React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, edu.dateRange),
-                      edu.description && React.createElement('p', { className: "text-xs mt-1 break-words font-semibold" }, edu.description)
-                    )
-                  ))
-                )
-              )
+            education && education.length > 0 && React.createElement('div', { className: "mt-8" },
+              React.createElement(SectionTitle, null, "Education"),
+              education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-4 p-4 bg-gray-100 rounded" },
+                React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${edu.degree}, ${edu.schoolName}`),
+                React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, edu.dateRange),
+                edu.description && React.createElement('p', { className: "text-xs mt-1 break-words font-semibold" }, edu.description)
+              ))
             )
           )
         )
       );
     };
 
-    // --- Komponenty pomocnicze (POZA CvForm aby uniknąć re-montowania) ---
-    const Input = ({ label, value, onChange, placeholder = "" }) => (
-      React.createElement('div', { className: "mb-3" },
-        React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, label),
-        React.createElement('input', { type: "text", value: value, onChange: onChange, placeholder: placeholder, className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500" })
-      )
+    // --- COMPONENTS/CVFORM.TSX ---
+    const Input = ({ label, value, onChange, placeholder = "" }) => React.createElement('div', { className: "mb-3" },
+      React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, label),
+      React.createElement('input', { type: "text", value: value, onChange: onChange, placeholder: placeholder, className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500" })
     );
 
-    const Section = ({ title, children }) => (
-      React.createElement('div', { className: "mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50/50" },
-        React.createElement('h3', { className: "text-lg font-bold text-gray-800 mb-4 border-b pb-2" }, title),
-        children
-      )
+    const Section = ({ title, children }) => React.createElement('div', { className: "mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50/50" },
+      React.createElement('h3', { className: "text-lg font-bold text-gray-800 mb-4 border-b pb-2" }, title),
+      children
     );
 
-    // --- components/CvForm.tsx (NAPRAWIONE ZADANIA) ---
     const CvForm = ({ cvData, setCvData }) => {
       const handleFieldChange = (field, value) => {
         setCvData(prev => ({ ...prev, [field]: value }));
       };
 
       const handleImageUpload = (event) => {
-        const file = event.target.files[0];
+        const file = event.target.files?.[0];
         if (file) {
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -305,90 +262,44 @@
       };
 
       const handleDynamicChange = (section, itemId, field, value) => {
-        const newItems = cvData[section].map((item) =>
+        const items = cvData[section];
+        const newItems = items.map((item) =>
           item.id === itemId ? { ...item, [field]: value } : item
         );
         setCvData(prev => ({ ...prev, [section]: newItems }));
       };
 
-      // POPRAWIONA FUNKCJA - UŻYWA task.id DO ZNALEZIENIA ZADANIA
-      const handleTaskChange = (workIndex, taskId, value) => {
-        const newWorkExperience = cvData.workExperience.map((work, wIndex) => {
-            if (wIndex === workIndex) {
-                const newTasks = work.tasks.map(task => 
-                    task.id === taskId ? { ...task, text: value } : task
-                );
-                return { ...work, tasks: newTasks };
-            }
-            return work;
+      const handleTaskChange = (workId, taskId, value) => {
+        const newWorkExperience = cvData.workExperience.map((work) => {
+          if (work.id === workId) {
+            const newTasks = work.tasks.map(task =>
+              task.id === taskId ? { ...task, text: value } : task
+            );
+            return { ...work, tasks: newTasks };
+          }
+          return work;
         });
         setCvData(prev => ({ ...prev, workExperience: newWorkExperience }));
       };
 
-      // POPRAWIONA FUNKCJA - DODAJE NOWE ZADANIE Z UNIKALNYM ID
-      const addTask = (workIndex) => {
-        const newWorkExperience = cvData.workExperience.map((work, wIndex) => {
-            if (wIndex === workIndex) {
-                return { ...work, tasks: [...work.tasks, { id: generateUniqueId(), text: '' }] };
-            }
-            return work;
+      const addTask = (workId) => {
+        const newWorkExperience = cvData.workExperience.map((work) => {
+          if (work.id === workId) {
+            return { ...work, tasks: [...work.tasks, { id: generateUniqueId(), text: '' }] };
+          }
+          return work;
         });
         setCvData(prev => ({ ...prev, workExperience: newWorkExperience }));
       };
 
-      // POPRAWIONA FUNKCJA - UŻYWA task.id DO USUNIĘCIA ZADANIA
-      const removeTask = (workIndex, taskId) => {
-        const newWorkExperience = cvData.workExperience.map((work, wIndex) => {
-            if (wIndex === workIndex) {
-                return { ...work, tasks: work.tasks.filter(task => task.id !== taskId) };
-            }
-            return work;
+      const removeTask = (workId, taskId) => {
+        const newWorkExperience = cvData.workExperience.map((work) => {
+          if (work.id === workId) {
+            return { ...work, tasks: work.tasks.filter(task => task.id !== taskId) };
+          }
+          return work;
         });
         setCvData(prev => ({ ...prev, workExperience: newWorkExperience }));
-      };
-
-      // FUNKCJE DLA UMIEJĘTNOŚCI
-      const handleSkillChange = (skillId, value) => {
-        const newSkills = cvData.skills.map(skill => 
-          skill.id === skillId ? { ...skill, text: value } : skill
-        );
-        setCvData(prev => ({ ...prev, skills: newSkills }));
-      };
-
-      const addSkill = () => {
-        setCvData(prev => ({ 
-          ...prev, 
-          skills: [...prev.skills, { id: generateUniqueId(), text: '' }] 
-        }));
-      };
-
-      const removeSkill = (skillId) => {
-        setCvData(prev => ({ 
-          ...prev, 
-          skills: prev.skills.filter(skill => skill.id !== skillId) 
-        }));
-      };
-
-      // FUNKCJE DLA JĘZYKÓW
-      const handleLanguageChange = (languageId, value) => {
-        const newLanguages = cvData.languages.map(language => 
-          language.id === languageId ? { ...language, text: value } : language
-        );
-        setCvData(prev => ({ ...prev, languages: newLanguages }));
-      };
-
-      const addLanguage = () => {
-        setCvData(prev => ({ 
-          ...prev, 
-          languages: [...prev.languages, { id: generateUniqueId(), text: '' }] 
-        }));
-      };
-
-      const removeLanguage = (languageId) => {
-        setCvData(prev => ({ 
-          ...prev, 
-          languages: prev.languages.filter(language => language.id !== languageId) 
-        }));
       };
 
       const addItem = (section) => {
@@ -396,6 +307,8 @@
         let newItem;
         switch (section) {
           case 'personalDetails':
+          case 'skills':
+          case 'languages':
             newItem = { id, text: '' };
             break;
           case 'workExperience':
@@ -404,6 +317,8 @@
           case 'education':
             newItem = { id, schoolName: '', degree: '', dateRange: '', description: '' };
             break;
+          default:
+            return;
         }
         setCvData(prev => ({ ...prev, [section]: [...prev[section], newItem] }));
       };
@@ -412,138 +327,68 @@
         setCvData(prev => ({ ...prev, [section]: prev[section].filter(item => item.id !== id) }));
       };
 
-      return (
-        React.createElement('div', { className: "space-y-6" },
-          /* Sekcja Wypełnij z AI została usunięta */
-
-          React.createElement(Section, { title: "Podstawowe informacje" },
-            React.createElement(Input, { label: "Imię i nazwisko", value: cvData.name, onChange: e => handleFieldChange('name', e.target.value), placeholder: "Jan Kowalski" }),
-            
-            React.createElement('div', { className: "mb-3" },
-              React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Zdjęcie profilowe"),
-              React.createElement('input', { 
-                type: "file", 
-                accept: "image/*",
-                onChange: handleImageUpload,
-                className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
-              })
+      return React.createElement('div', { className: "space-y-6" },
+        React.createElement(Section, { title: "Podstawowe informacje" },
+          React.createElement(Input, { label: "Imię i nazwisko", value: cvData.name, onChange: e => handleFieldChange('name', e.target.value), placeholder: "Jan Kowalski" }),
+          React.createElement('div', { className: "mb-3" },
+            React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Zdjęcie profilowe"),
+            React.createElement('input', { type: "file", accept: "image/*", onChange: handleImageUpload, className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" })
+          ),
+          React.createElement(Input, { label: "Data urodzenia", value: cvData.dob, onChange: e => handleFieldChange('dob', e.target.value), placeholder: "16/10/1985" })
+        ),
+        ['personalDetails', 'skills', 'languages'].map(sectionKey => {
+          const titleMap = { personalDetails: 'Uprawnienia', skills: 'Dodatkowe umiejętności', languages: 'Znajomość języków obcych' };
+          const placeholderMap = { personalDetails: 'np. EUROPEAN CERTIFICATE forklift driver', skills: 'np. Obsługa wózka widłowego', languages: 'np. Angielski - komunikatywny' };
+          
+          return React.createElement(Section, { title: titleMap[sectionKey], key: sectionKey },
+            cvData[sectionKey].map((item) =>
+              React.createElement('div', { key: item.id, className: "flex gap-2 items-center mb-2" },
+                React.createElement('input', { type: "text", placeholder: placeholderMap[sectionKey], value: item.text, onChange: e => handleDynamicChange(sectionKey, item.id, 'text', e.target.value), className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
+                React.createElement('button', { onClick: () => removeItem(sectionKey, item.id), className: "text-red-500 hover:text-red-700 text-2xl font-light" }, "×")
+              )
             ),
-            React.createElement(Input, { label: "Data urodzenia", value: cvData.dob, onChange: e => handleFieldChange('dob', e.target.value), placeholder: "16/10/1985" })
-          ),
-
-          React.createElement(Section, { title: "Uprawnienia" },
-            cvData.personalDetails.map((detail, index) => (
-              React.createElement('div', { key: detail.id, className: "flex gap-2 items-center mb-2" },
-                React.createElement('input', {
-                  type: "text",
-                  placeholder: "Uprawnienie (np. EUROPEAN CERTIFICATE forklift driver, DRIVING Ept/Heftruck, EXPERIENCE 4y)",
-                  value: detail.text,
-                  onChange: e => handleDynamicChange('personalDetails', detail.id, 'text', e.target.value),
-                  className: "flex-grow border border-gray-300 rounded-md p-2 text-sm"
-                }),
-                React.createElement('button', {
-                  onClick: () => removeItem('personalDetails', detail.id),
-                  className: "text-red-500 hover:text-red-700 text-2xl font-light"
-                }, "×")
-              )
-            )),
-            React.createElement('button', { onClick: () => addItem('personalDetails'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj uprawnienie")
-          ),
-
-          React.createElement(Section, { title: "Dodatkowe umiejętności" },
-            cvData.skills.map((skill, index) => (
-              React.createElement('div', { key: skill.id, className: "flex gap-2 items-center mb-2" },
-                React.createElement('input', {
-                  type: "text",
-                  placeholder: "Umiejętność (np. Obsługa wózka widłowego, Pakowanie towarów)",
-                  value: skill.text,
-                  onChange: e => handleSkillChange(skill.id, e.target.value),
-                  className: "flex-grow border border-gray-300 rounded-md p-2 text-sm"
-                }),
-                React.createElement('button', {
-                  onClick: () => removeSkill(skill.id),
-                  className: "text-red-500 hover:text-red-700 text-2xl font-light"
-                }, "×")
-              )
-            )),
-            React.createElement('button', { onClick: addSkill, className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj umiejętność")
-          ),
-
-          React.createElement(Section, { title: "Znajomość języków obcych" },
-            cvData.languages.map((language, index) => (
-              React.createElement('div', { key: language.id, className: "flex gap-2 items-center mb-2" },
-                React.createElement('input', {
-                  type: "text",
-                  placeholder: "Język (np. Angielski - komunikatywny, Polski - ojczysty, Niemiecki - podstawowy)",
-                  value: language.text,
-                  onChange: e => handleLanguageChange(language.id, e.target.value),
-                  className: "flex-grow border border-gray-300 rounded-md p-2 text-sm"
-                }),
-                React.createElement('button', {
-                  onClick: () => removeLanguage(language.id),
-                  className: "text-red-500 hover:text-red-700 text-2xl font-light"
-                }, "×")
-              )
-            )),
-            React.createElement('button', { onClick: addLanguage, className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj język")
-          ),
-
-          React.createElement(Section, { title: "Doświadczenie zawodowe" },
-            cvData.workExperience.map((exp, index) => (
-              React.createElement('div', { key: exp.id, className: "p-3 border rounded-md mb-3 bg-white relative" },
-                React.createElement('button', { onClick: () => removeItem('workExperience', exp.id), className: "absolute top-1 right-2 text-red-500 hover:text-red-700 text-2xl font-light" }, "×"),
-                React.createElement('input', { placeholder: "Stanowisko (np. Magazynier, Operator wózka widłowego)", value: exp.jobTitle, onChange: e => handleDynamicChange('workExperience', exp.id, 'jobTitle', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-                React.createElement('input', { placeholder: "Firma (np. Covebo Logistics, EKO FORMA)", value: exp.company, onChange: e => handleDynamicChange('workExperience', exp.id, 'company', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-                React.createElement('input', { placeholder: "Okres (np. 01.2022 - Obecnie)", value: exp.dateRange, onChange: e => handleDynamicChange('workExperience', exp.id, 'dateRange', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-
-                // NOWE POLA DLA ZADAŃ
-                React.createElement('div', { className: "mt-3 pt-2 border-t" },
-                  React.createElement('p', { className: "text-xs font-semibold mb-1 text-gray-500" }, "Zadania (każde to oddzielne pole):"),
-                  // UŻYCIE task.id JAKO KLUCZA
-                  exp.tasks.map((task, taskIndex) => (
-                      React.createElement('div', { key: task.id, className: "flex gap-2 items-center mb-1" },
-                          React.createElement('input', {
-                              type: "text",
-                              placeholder: "Opis zadania (np. Obsługa wózka widłowego, Zarządzanie magazynem)",
-                              value: task.text,
-                              onChange: e => handleTaskChange(index, task.id, e.target.value),
-                              className: "flex-grow border border-gray-200 rounded-md p-1 text-sm"
-                          }),
-                          React.createElement('button', {
-                              onClick: () => removeTask(index, task.id),
-                              className: "text-gray-400 hover:text-red-500 text-xl leading-none font-light p-1"
-                          }, "–")
-                      )
-                  )),
-                  React.createElement('button', { onClick: () => addTask(index), className: "mt-2 text-xs text-red-600 font-semibold flex items-center gap-1" }, 
-                      React.createElement('span', { className: "text-lg leading-none" }, "+"), "Dodaj Zadanie"
-                  )
-                )
-                // KONIEC NOWYCH PÓL DLA ZADAŃ
-
-              )
-            )),
-            React.createElement('button', { onClick: () => addItem('workExperience'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj doświadczenie")
-          ),
-
-          React.createElement(Section, { title: "Wykształcenie" },
-            cvData.education.map((edu, index) => (
-              React.createElement('div', { key: edu.id, className: "p-3 border rounded-md mb-3 bg-white relative" },
-                React.createElement('button', { onClick: () => removeItem('education', edu.id), className: "absolute top-1 right-2 text-red-500 hover:text-red-700 text-2xl font-light" }, "×"),
-                React.createElement('input', { placeholder: "Nazwa szkoły/uczelni (np. Technikum Mechaniczne, Politechnika Warszawska)", value: edu.schoolName, onChange: e => handleDynamicChange('education', edu.id, 'schoolName', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-                React.createElement('input', { placeholder: "Kierunek/Stopień (np. Technik Mechanik, Inżynier Logistyki)", value: edu.degree, onChange: e => handleDynamicChange('education', edu.id, 'degree', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-                React.createElement('input', { placeholder: "Okres (np. 2015 - 2019)", value: edu.dateRange, onChange: e => handleDynamicChange('education', edu.id, 'dateRange', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-                React.createElement('textarea', { placeholder: "Dodatkowy opis (np. Specjalizacja w zarządzaniu łańcuchem dostaw, praca dyplomowa...)", value: edu.description, onChange: e => handleDynamicChange('education', edu.id, 'description', e.target.value), className: "w-full border p-1 text-sm", rows: 2 })
-              )
-            )),
-            React.createElement('button', { onClick: () => addItem('education'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj wykształcenie")
+            React.createElement('button', { onClick: () => addItem(sectionKey), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj")
           )
+        }),
+        React.createElement(Section, { title: "Doświadczenie zawodowe" },
+          cvData.workExperience.map((exp) =>
+            React.createElement('div', { key: exp.id, className: "p-3 border rounded-md mb-3 bg-white relative" },
+              React.createElement('button', { onClick: () => removeItem('workExperience', exp.id), className: "absolute top-1 right-2 text-red-500 hover:text-red-700 text-2xl font-light" }, "×"),
+              React.createElement('input', { placeholder: "Stanowisko", value: exp.jobTitle, onChange: e => handleDynamicChange('workExperience', exp.id, 'jobTitle', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
+              React.createElement('input', { placeholder: "Firma", value: exp.company, onChange: e => handleDynamicChange('workExperience', exp.id, 'company', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
+              React.createElement('input', { placeholder: "Okres", value: exp.dateRange, onChange: e => handleDynamicChange('workExperience', exp.id, 'dateRange', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
+              React.createElement('div', { className: "mt-3 pt-2 border-t" },
+                React.createElement('p', { className: "text-xs font-semibold mb-1 text-gray-500" }, "Zadania:"),
+                exp.tasks.map((task) =>
+                  React.createElement('div', { key: task.id, className: "flex gap-2 items-center mb-1" },
+                    React.createElement('input', { type: "text", placeholder: "Opis zadania", value: task.text, onChange: e => handleTaskChange(exp.id, task.id, e.target.value), className: "flex-grow border border-gray-200 rounded-md p-1 text-sm" }),
+                    React.createElement('button', { onClick: () => removeTask(exp.id, task.id), className: "text-gray-400 hover:text-red-500 text-xl leading-none font-light p-1" }, "–")
+                  )
+                ),
+                React.createElement('button', { onClick: () => addTask(exp.id), className: "mt-2 text-xs text-red-600 font-semibold flex items-center gap-1" },
+                  React.createElement('span', { className: "text-lg leading-none" }, "+"), "Dodaj Zadanie"
+                )
+              )
+            )
+          ),
+          React.createElement('button', { onClick: () => addItem('workExperience'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj doświadczenie")
+        ),
+        React.createElement(Section, { title: "Wykształcenie" },
+          cvData.education.map((edu) =>
+            React.createElement('div', { key: edu.id, className: "p-3 border rounded-md mb-3 bg-white relative" },
+              React.createElement('button', { onClick: () => removeItem('education', edu.id), className: "absolute top-1 right-2 text-red-500 hover:text-red-700 text-2xl font-light" }, "×"),
+              React.createElement('input', { placeholder: "Nazwa szkoły/uczelni", value: edu.schoolName, onChange: e => handleDynamicChange('education', edu.id, 'schoolName', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
+              React.createElement('input', { placeholder: "Kierunek/Stopień", value: edu.degree, onChange: e => handleDynamicChange('education', edu.id, 'degree', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
+              React.createElement('input', { placeholder: "Okres", value: edu.dateRange, onChange: e => handleDynamicChange('education', edu.id, 'dateRange', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
+              React.createElement('textarea', { placeholder: "Dodatkowy opis", value: edu.description, onChange: e => handleDynamicChange('education', edu.id, 'description', e.target.value), className: "w-full border p-1 text-sm mt-2 rounded-md", rows: 2 })
+            )
+          ),
+          React.createElement('button', { onClick: () => addItem('education'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj wykształcenie")
         )
       );
     };
 
-    // --- App.tsx (Główny komponent) ---
-    // DANE POCZĄTKOWE - WSZYSTKIE POLA PUSTE, TYLKO PLACEHOLDERY PODPOWIADAJĄ CO WPISAĆ
+    // --- APP.TSX ---
     const initialCvData = {
       name: '',
       profilePictureUrl: '',
@@ -557,8 +402,12 @@
 
     function App() {
       const [cvData, setCvData] = useState(initialCvData);
-      const [mobileView, setMobileView] = useState('form'); // 'form' or 'preview'
+      const [mobileView, setMobileView] = useState('form');
 
+      useEffect(() => {
+        document.body.className = `bg-gray-100 mobile-view-${mobileView}`;
+      }, [mobileView]);
+      
       const handleDownloadPdf = async () => {
         try {
           await generatePdf('cv-to-print');
@@ -568,28 +417,38 @@
         }
       };
 
-      const handleShareWhatsApp = async () => {
+      const handleShare = async (type) => {
         try {
-          // Generowanie PDF jako pliku
-          const pdfFile = await generatePdfBlob('cv-to-print', `CV_${cvData.name.replace(/\s/g, '_')}.pdf`);
-          
-          // Sprawdzenie czy przeglądarka wspiera Web Share API
+          const pdfFile = await generatePdfBlob('cv-to-print', `CV_${cvData.name.replace(/\s/g, '_') || 'Kandydat'}.pdf`);
+          const shareData = {
+            title: `CV - ${cvData.name}`,
+            text: type === 'email' ? `Przesyłam w załączeniu moje CV.\n\nPozdrawiam,\n${cvData.name}` : `Przesyłam moje CV`,
+            files: [pdfFile]
+          };
+
           if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-            await navigator.share({
-              title: `CV - ${cvData.name}`,
-              text: `Przesyłam moje CV`,
-              files: [pdfFile]
-            });
+            await navigator.share(shareData);
           } else {
-            // Fallback - pobierz PDF i pokaż komunikat
             const url = URL.createObjectURL(pdfFile);
             const a = document.createElement('a');
             a.href = url;
             a.download = pdfFile.name;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
-            alert('PDF zostało pobrane. Teraz możesz je ręcznie udostępnić przez WhatsApp:\n\n1. Otwórz WhatsApp\n2. Wybierz rozmowę\n3. Kliknij ikonę załącznika\n4. Wybierz pobrany plik CV');
+
+            if (type === 'email') {
+              const subject = `CV - ${cvData.name}`;
+              const body = `Dzień dobry,\n\nW załączeniu przesyłam moje CV (plik został pobrany automatycznie).\n\nPozdrawiam,\n${cvData.name}`;
+              const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+              window.location.href = mailtoUrl;
+              setTimeout(() => {
+                alert('PDF zostało pobrane.\nOkno email zostało otwarte - pamiętaj załączyć pobrany plik!')
+              }, 1000);
+            } else {
+              alert('PDF zostało pobrane. Teraz możesz je ręcznie udostępnić przez WhatsApp:\n\n1. Otwórz WhatsApp\n2. Wybierz rozmowę\n3. Kliknij ikonę załącznika\n4. Wybierz pobrany plik CV');
+            }
           }
         } catch (error) {
           console.error("Share failed", error);
@@ -597,135 +456,42 @@
         }
       };
 
-      const handleShareEmail = async () => {
-        try {
-          // Generowanie PDF jako pliku
-          const pdfFile = await generatePdfBlob('cv-to-print', `CV_${cvData.name.replace(/\s/g, '_')}.pdf`);
-          
-          // Sprawdzenie czy przeglądarka wspiera Web Share API
-          if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-            await navigator.share({
-              title: `CV - ${cvData.name}`,
-              text: `Przesyłam w załączeniu moje CV.\n\nPozdrawiam,\n${cvData.name}`,
-              files: [pdfFile]
-            });
-          } else {
-            // Fallback - pobierz PDF i otwórz klienta email
-            const url = URL.createObjectURL(pdfFile);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = pdfFile.name;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            const subject = `CV - ${cvData.name}`;
-            const body = `Dzień dobry,\n\nW załączeniu przesyłam moje CV (plik został pobrany automatycznie).\n\nPozdrawiam,\n${cvData.name}`;
-            const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.location.href = mailtoUrl;
-            
-            setTimeout(() => {
-              alert('PDF zostało pobrane.\nOkno email zostało otwarte - pamiętaj załączyć pobrany plik!');
-            }, 500);
-          }
-        } catch (error) {
-          console.error("Share failed", error);
-          alert("Błąd podczas udostępniania. Spróbuj najpierw pobrać PDF przyciskiem 'Pobierz PDF'.");
-        }
-      };
-
-      const mobileToggle = React.createElement('div', { className: "md:hidden p-2 bg-gray-50 border-b sticky top-[65px] z-10" },
-        React.createElement('div', { className: "flex justify-center rounded-md shadow-sm", role: "group" },
-          React.createElement('button', {
-            type: "button",
-            onClick: () => setMobileView('form'),
-            className: `px-4 py-2 text-sm font-medium border rounded-l-lg ${mobileView === 'form' ? 'bg-red-600 text-white border-red-600 z-10 ring-2 ring-red-500' : 'bg-white text-gray-900 border-gray-200 hover:bg-gray-100'}`
-          }, "Formularz"),
-          React.createElement('button', {
-            type: "button",
-            onClick: () => setMobileView('preview'),
-            className: `px-4 py-2 text-sm font-medium border rounded-r-lg ${mobileView === 'preview' ? 'bg-red-600 text-white border-red-600 z-10 ring-2 ring-red-500' : 'bg-white text-gray-900 border-gray-200 hover:bg-gray-100'}`
-          }, "Podgląd CV")
-        )
-      );
-
-      return (
-        React.createElement('div', { className: "flex flex-col min-h-screen bg-gray-100" },
-          React.createElement('header', { className: "bg-white p-4 shadow-md flex justify-between items-center sticky top-0 z-20 border-b" },
-            React.createElement('div', { className: "flex items-center gap-3" },
-              React.createElement('a', { href: "#", "aria-label": "Strona główna Covebo" },
-                React.createElement(CoveboLogo, { className: "h-8 w-auto text-[#CE0031]" })
-              ),
-              React.createElement('h1', { className: "text-xl font-bold text-gray-700 hidden sm:block" }, "Generator CV")
-            ),
-            React.createElement('div', { className: "flex gap-2 flex-wrap justify-end" },
-              React.createElement('button', {
-                onClick: handleShareWhatsApp,
-                className: "bg-white hover:bg-red-50 text-[#CE0031] border-2 border-[#CE0031] font-bold py-2 px-3 md:px-4 rounded-md flex items-center gap-2 transition-colors text-xs md:text-base shadow-md",
-                title: "Wyślij przez WhatsApp"
-              }, 
-                React.createElement('img', { 
-                  src: "attached_assets/image_1761921024002.png", 
-                  alt: "WhatsApp",
-                  className: "w-6 h-6 flex-shrink-0"
-                }),
-                React.createElement('span', null, "Wyślij")
-              ),
-              React.createElement('button', {
-                onClick: handleShareEmail,
-                className: "bg-white hover:bg-red-50 text-[#CE0031] border-2 border-[#CE0031] font-bold py-2 px-3 md:px-4 rounded-md flex items-center gap-2 transition-colors text-xs md:text-base shadow-md",
-                title: "Wyślij emailem"
-              }, 
-                React.createElement('svg', { 
-                  className: "w-6 h-6 flex-shrink-0",
-                  viewBox: "0 0 24 24",
-                  fill: "none",
-                  stroke: "#CE0031",
-                  strokeWidth: "2",
-                  strokeLinecap: "round",
-                  strokeLinejoin: "round"
-                },
-                  React.createElement('path', { d: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" })
-                ),
-                React.createElement('span', null, "Wyślij")
-              ),
-              React.createElement('button', {
-                onClick: handleDownloadPdf,
-                className: "bg-[#CE0031] hover:bg-red-700 text-white font-bold py-2 px-3 md:px-4 rounded-md flex items-center gap-2 transition-colors text-xs md:text-base shadow-md"
-              }, 
-                React.createElement('span', { className: "text-lg" }, "📄"),
-                React.createElement('span', { className: "hidden sm:inline" }, "Pobierz PDF"),
-                React.createElement('span', { className: "sm:hidden" }, "PDF")
-              )
+      return React.createElement('div', { className: "min-h-screen flex flex-col items-center p-4 md:p-8" },
+        React.createElement('header', { className: "w-full max-w-7xl mb-6 bg-white p-4 rounded-lg shadow-lg flex justify-between items-center flex-wrap gap-4" },
+          React.createElement('h1', { className: "text-xl font-bold text-gray-800" }, "Generator CV Covebo"),
+          React.createElement('div', { className: "flex flex-wrap space-x-2" },
+            React.createElement('button', { onClick: handleDownloadPdf, className: "bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-150 hidden md:inline-flex items-center gap-2" }, "Pobierz PDF"),
+            React.createElement('button', { onClick: () => handleShare('whatsapp'), className: "bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-150 flex items-center gap-2" }, "Udostępnij (WhatsApp)"),
+            React.createElement('button', { onClick: () => handleShare('email'), className: "bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-150 flex items-center gap-2" }, "Udostępnij (Email)")
+          )
+        ),
+        React.createElement('div', { className: "w-full max-w-7xl mb-4 flex md:hidden justify-center space-x-4" },
+          React.createElement('button', { onClick: () => setMobileView('form'), className: `py-2 px-4 rounded-lg font-semibold transition ${mobileView === 'form' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}` }, "Formularz"),
+          React.createElement('button', { onClick: () => setMobileView('preview'), className: `py-2 px-4 rounded-lg font-semibold transition ${mobileView === 'preview' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}` }, "Podgląd")
+        ),
+        React.createElement('div', { className: "w-full max-w-7xl flex flex-col md:flex-row gap-8" },
+          React.createElement('div', { id: "cv-form-container", className: "w-full md:w-1/2" },
+            React.createElement('div', { id: "cv-form", className: "bg-white p-6 rounded-lg shadow-xl h-full" },
+              React.createElement(CvForm, { cvData: cvData, setCvData: setCvData })
             )
           ),
-          React.createElement('div', { className: "flex-grow flex flex-col md:flex-row overflow-hidden" },
-            mobileToggle,
-            // Lewy panel - 35% szerokości
-            React.createElement('div', { className: `w-full md:w-[35%] p-4 md:p-6 bg-white overflow-y-auto ${mobileView === 'form' ? 'block' : 'hidden'} md:block` },
-              React.createElement(CvForm, { cvData: cvData, setCvData: setCvData })
-            ),
-            // Prawy panel - 65% szerokości
-            React.createElement('div', { className: `w-full md:w-[65%] flex-grow flex items-start justify-center bg-gray-200 overflow-auto ${mobileView === 'preview' ? 'block' : 'hidden'} md:flex md:p-10` },
-              React.createElement('div', { className: "w-full md:w-auto md:transform md:scale-[0.6] lg:scale-[0.8] origin-top" },
-                React.createElement(CvPreview, { cvData: cvData, id: "cv-to-print" })
-              )
+          React.createElement('div', { id: "cv-preview-container", className: "w-full md:w-1/2 flex justify-center" },
+            React.createElement('div', { id: "cv-preview", className: "transform scale-[0.9] md:scale-[0.8] lg:scale-[0.9] origin-top" },
+              React.createElement(CvPreview, { cvData: cvData, id: "cv-to-print" })
             )
           )
         )
       );
     }
 
-    // --- index.tsx ---
-    const rootElement = document.getElementById('root');
-    if (!rootElement) {
-      throw new Error("Could not find root element to mount to");
+    // --- RENDER APP ---
+    const container = document.getElementById('root');
+    if (container) {
+      const root = ReactDOM.createRoot(container);
+      root.render(React.createElement(App));
+    } else {
+      console.error('Root element not found');
     }
-
-    const root = ReactDOM.createRoot(rootElement);
-
-    root.render(
-      React.createElement(App, null)
-    );
   </script>
 </body>
 </html>

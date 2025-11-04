@@ -215,7 +215,7 @@
             )
           ),
           React.createElement('div', { 
-            className: "absolute left-1/2 transform -translate-x-1/2 rounded-full bg-white p-2 shadow-lg",
+            className: "absolute left-10 rounded-full bg-white p-2 shadow-lg",
             style: { top: `${profileImageTop}px`, width: `${profileImageSize}px`, height: `${profileImageSize}px` }
           },
             React.createElement('img', { src: profilePictureUrl || `https://picsum.photos/seed/${name || 'placeholder'}/180`, alt: name, className: "w-full h-full rounded-full object-cover" })
@@ -256,7 +256,7 @@
           React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2 flex flex-col" },
             React.createElement('div', null,
                 workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
-                React.createElement(SectionTitle, null, "Work Experience"),
+                React.createElement(SectionTitle, null, "Doświadczenie"),
                 workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-6" },
                     React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${exp.jobTitle}, ${exp.company}`),
                     React.createElement('p', { className: "text-xs text-black my-2" }, exp.dateRange),
@@ -266,7 +266,7 @@
                 ))
                 ),
                 education && education.length > 0 && React.createElement('div', { className: "mt-8" },
-                React.createElement(SectionTitle, null, "Education"),
+                React.createElement(SectionTitle, null, "Edukacja"),
                 education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-6" },
                     React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${edu.degree}, ${edu.schoolName}`),
                     React.createElement('p', { className: "text-xs text-black my-2" }, edu.dateRange),

@@ -142,7 +142,7 @@
     );
 
     const ScannerIcon = (props) => React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
-        React.createElement('path', { d: "M5.5 4.75a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v14.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1Z" }),
+        React.createElement('path', { d: "M5.5 4.75a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v14.5a1 1 0 0 1-1-1h-11a1 1 0 0 1-1-1Z" }),
         React.createElement('path', { d: "M8.5 8.75h7" }),
         React.createElement('path', { d: "M8.5 12.75h4" }),
         React.createElement('path', { d: "M21.25 10.75a4.5 4.5 0 0 0 0 3" })
@@ -161,8 +161,7 @@
             ),
             React.createElement('div', { className: "w-full md:w-2/3 mt-4 md:mt-0 md:pl-12 flex flex-col md:flex-row justify-center md:justify-between items-center" },
               React.createElement('div', { className: "text-center md:text-left" },
-                React.createElement('h1', { className: "text-4xl md:text-5xl font-bold leading-tight tracking-wide break-words" }, name || 'Imię i Nazwisko'),
-                dob && React.createElement('p', { className: "text-sm md:text-base font-light mt-2 tracking-wide opacity-90" }, dob)
+                React.createElement('h1', { className: "text-4xl md:text-5xl font-bold leading-tight tracking-wide break-words" }, name || 'Imię i Nazwisko')
               ),
               React.createElement('div', { className: "flex flex-row md:flex-col gap-3 mt-4 md:mt-0" },
                 React.createElement('div', { className: "w-16 h-16 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50 shrink-0" },
@@ -182,22 +181,26 @@
           React.createElement('div', { className: "w-full md:w-[38%] p-6 md:pl-10 md:pr-6 md:pb-8 order-2 md:order-1" },
             React.createElement('div', { className: "bg-gray-100 p-6 h-full" },
                 React.createElement('div', null,
+                  dob && React.createElement('div', { className: "mb-6" },
+                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Data urodzenia"),
+                    React.createElement('p', { className: "text-sm text-black font-normal break-words" }, dob)
+                  ),
                   personalDetails && personalDetails.length > 0 && React.createElement('div', { className: "mb-6" },
                     React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Uprawnienia"),
-                    React.createElement('div', { className: "space-y-1" },
-                      personalDetails.map(detail => React.createElement('p', { key: detail.id, className: "text-sm text-black font-normal break-words" }, detail.text))
+                    React.createElement('ul', { className: "list-disc pl-5 space-y-1" },
+                      personalDetails.map(detail => React.createElement('li', { key: detail.id, className: "text-sm text-black font-normal break-words" }, detail.text))
                     )
                   ),
                   skills && skills.length > 0 && React.createElement('div', { className: "mb-6" },
                     React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Dodatkowe umiejętności"),
-                    React.createElement('div', { className: "space-y-1" },
-                      skills.map(skill => React.createElement('p', { key: skill.id, className: "text-sm text-black font-normal break-words" }, skill.text))
+                    React.createElement('ul', { className: "list-disc pl-5 space-y-1" },
+                      skills.map(skill => React.createElement('li', { key: skill.id, className: "text-sm text-black font-normal break-words" }, skill.text))
                     )
                   ),
                   languages && languages.length > 0 && React.createElement('div', null,
                     React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Znajomość języków obcych"),
-                    React.createElement('div', { className: "space-y-1" },
-                      languages.map(language => React.createElement('p', { key: language.id, className: "text-sm text-black font-normal break-words" }, language.text))
+                    React.createElement('ul', { className: "list-disc pl-5 space-y-1" },
+                      languages.map(language => React.createElement('li', { key: language.id, className: "text-sm text-black font-normal break-words" }, language.text))
                     )
                   )
                 )
@@ -207,20 +210,20 @@
             React.createElement('div', null,
                 workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
                 React.createElement(SectionTitle, null, "Work Experience"),
-                workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-4 p-4 bg-gray-100 rounded" },
-                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${exp.jobTitle}, ${exp.company}`),
-                    React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, exp.dateRange),
+                workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-6" },
+                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${exp.jobTitle}, ${exp.company}`),
+                    React.createElement('p', { className: "text-xs text-black my-2" }, exp.dateRange),
                     React.createElement('ul', { className: "list-disc pl-5 text-xs space-y-1" },
-                    exp.tasks.map(task => React.createElement('li', { key: task.id, className: "break-words font-semibold" }, task.text))
+                    exp.tasks.map(task => React.createElement('li', { key: task.id, className: "break-words" }, task.text))
                     )
                 ))
                 ),
                 education && education.length > 0 && React.createElement('div', { className: "mt-8" },
                 React.createElement(SectionTitle, null, "Education"),
-                education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-4 p-4 bg-gray-100 rounded" },
-                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words" }, `${edu.degree}, ${edu.schoolName}`),
-                    React.createElement('p', { className: "text-xs text-gray-600 mb-2" }, edu.dateRange),
-                    edu.description && React.createElement('p', { className: "text-xs mt-1 break-words font-semibold" }, edu.description)
+                education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-6" },
+                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${edu.degree}, ${edu.schoolName}`),
+                    React.createElement('p', { className: "text-xs text-black my-2" }, edu.dateRange),
+                    edu.description && React.createElement('p', { className: "text-xs mt-1 break-words" }, edu.description)
                 ))
                 )
             ),
@@ -338,20 +341,6 @@
           ),
           React.createElement(Input, { label: "Data urodzenia", value: cvData.dob, onChange: e => handleFieldChange('dob', e.target.value), placeholder: "16/10/1985" })
         ),
-        ['personalDetails', 'skills', 'languages'].map(sectionKey => {
-          const titleMap = { personalDetails: 'Uprawnienia', skills: 'Dodatkowe umiejętności', languages: 'Znajomość języków obcych' };
-          const placeholderMap = { personalDetails: 'np. EUROPEAN CERTIFICATE forklift driver', skills: 'np. Obsługa wózka widłowego', languages: 'np. Angielski - komunikatywny' };
-          
-          return React.createElement(Section, { title: titleMap[sectionKey], key: sectionKey },
-            cvData[sectionKey].map((item) =>
-              React.createElement('div', { key: item.id, className: "flex gap-2 items-center mb-2" },
-                React.createElement('input', { type: "text", placeholder: placeholderMap[sectionKey], value: item.text, onChange: e => handleDynamicChange(sectionKey, item.id, 'text', e.target.value), className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
-                React.createElement('button', { onClick: () => removeItem(sectionKey, item.id), className: "text-red-500 hover:text-red-700 text-2xl font-light" }, "×")
-              )
-            ),
-            React.createElement('button', { onClick: () => addItem(sectionKey), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj")
-          )
-        }),
         React.createElement(Section, { title: "Doświadczenie zawodowe" },
           cvData.workExperience.map((exp) =>
             React.createElement('div', { key: exp.id, className: "p-3 border rounded-md mb-3 bg-white relative" },
@@ -374,6 +363,33 @@
             )
           ),
           React.createElement('button', { onClick: () => addItem('workExperience'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj doświadczenie")
+        ),
+        React.createElement(Section, { title: "Uprawnienia", key: "personalDetails" },
+          cvData.personalDetails.map((item) =>
+            React.createElement('div', { key: item.id, className: "flex gap-2 items-center mb-2" },
+              React.createElement('input', { type: "text", placeholder: "np. EUROPEAN CERTIFICATE forklift driver", value: item.text, onChange: e => handleDynamicChange('personalDetails', item.id, 'text', e.target.value), className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
+              React.createElement('button', { onClick: () => removeItem('personalDetails', item.id), className: "text-red-500 hover:text-red-700 text-2xl font-light" }, "×")
+            )
+          ),
+          React.createElement('button', { onClick: () => addItem('personalDetails'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj")
+        ),
+        React.createElement(Section, { title: "Znajomość języków obcych", key: "languages" },
+            cvData.languages.map((item) =>
+              React.createElement('div', { key: item.id, className: "flex gap-2 items-center mb-2" },
+                React.createElement('input', { type: "text", placeholder: "np. Angielski - komunikatywny", value: item.text, onChange: e => handleDynamicChange('languages', item.id, 'text', e.target.value), className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
+                React.createElement('button', { onClick: () => removeItem('languages', item.id), className: "text-red-500 hover:text-red-700 text-2xl font-light" }, "×")
+              )
+            ),
+            React.createElement('button', { onClick: () => addItem('languages'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj")
+        ),
+        React.createElement(Section, { title: "Dodatkowe umiejętności", key: "skills" },
+            cvData.skills.map((item) =>
+              React.createElement('div', { key: item.id, className: "flex gap-2 items-center mb-2" },
+                React.createElement('input', { type: "text", placeholder: "np. Obsługa wózka widłowego", value: item.text, onChange: e => handleDynamicChange('skills', item.id, 'text', e.target.value), className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
+                React.createElement('button', { onClick: () => removeItem('skills', item.id), className: "text-red-500 hover:text-red-700 text-2xl font-light" }, "×")
+              )
+            ),
+            React.createElement('button', { onClick: () => addItem('skills'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj")
         ),
         React.createElement(Section, { title: "Wykształcenie" },
           cvData.education.map((edu) =>
@@ -477,8 +493,8 @@
               React.createElement(CvForm, { cvData: cvData, setCvData: setCvData })
             )
           ),
-          React.createElement('div', { id: "cv-preview-container", className: "w-full md:w-1/2 flex justify-center" },
-            React.createElement('div', { id: "cv-preview", className: "transform scale-[0.9] md:scale-[0.8] lg:scale-[0.9] origin-top" },
+          React.createElement('div', { id: "cv-preview-container", className: "w-full md:w-1/2 flex justify-center md:justify-start" },
+            React.createElement('div', { id: "cv-preview", className: "transform scale-[0.42] sm:scale-[0.75] md:scale-[0.8] lg:scale-[0.9] origin-top" },
               React.createElement(CvPreview, { cvData: cvData, id: "cv-to-print" })
             )
           )

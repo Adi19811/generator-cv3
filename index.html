@@ -254,7 +254,7 @@
             )
           ),
           React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2 flex flex-col" },
-            React.createElement('div', null,
+            React.createElement('div', { className: "flex-grow" },
                 workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
                 React.createElement(SectionTitle, null, "Doświadczenie"),
                 workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-6" },
@@ -274,7 +274,7 @@
                 ))
                 )
             ),
-            React.createElement('div', { className: 'mt-auto pt-6 flex justify-end' },
+            React.createElement('div', { className: 'pt-6 flex justify-end' },
                 React.createElement('img', {
                     src: "logo-covebo.png",
                     alt: "Covebo Logo",

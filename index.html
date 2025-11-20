@@ -39,11 +39,64 @@
 <body class="bg-gray-100">
   <div id="root"></div>
   <script type="module">
-    import React, { useState, useEffect } from 'react';
+    import React, { useState, useEffect, useRef } from 'react';
     import ReactDOM from 'react-dom/client';
 
     // --- UTILS ---
     const generateUniqueId = () => new Date().getTime().toString() + Math.random().toString(36).substring(2, 9);
+
+    // Function to crop and round the image on a canvas
+    const getRoundedCanvasCroppedImage = async (imageUrl, position, targetSize = 180) => {
+        if (!imageUrl) return '';
+
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = targetSize;
+                canvas.height = targetSize;
+                const ctx = canvas.getContext('2d');
+
+                // Calculate image dimensions to fit/cover
+                const imgAspectRatio = img.width / img.height;
+                const targetAspectRatio = 1; // Square crop
+
+                let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
+                let dx = 0, dy = 0, dWidth = targetSize, dHeight = targetSize;
+
+                if (imgAspectRatio > targetAspectRatio) { // Image is wider than the target square
+                    sHeight = img.height;
+                    sWidth = img.height * targetAspectRatio;
+                    sx = (img.width - sWidth) * (position.x / 100);
+                } else { // Image is taller or same aspect ratio as the target square
+                    sWidth = img.width;
+                    sHeight = img.width / targetAspectRatio;
+                    sy = (img.height - sHeight) * (position.y / 100);
+                }
+                
+                // Ensure source dimensions are positive
+                if (sWidth <= 0 || sHeight <= 0) {
+                    resolve('');
+                    return;
+                }
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(targetSize / 2, targetSize / 2, targetSize / 2, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.clip();
+
+                // Draw the image onto the canvas, fitting it correctly
+                ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+
+                ctx.restore();
+
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.onerror = () => resolve(''); // Handle image loading errors
+            img.src = imageUrl;
+        });
+    };
 
     // --- SERVICES/PDFGENERATOR.TS ---
     const createPdf = async (elementId, outputType = 'save') => {
@@ -53,17 +106,25 @@
       }
 
       const clone = originalElement.cloneNode(true);
+      
+      // FIX 1: Usunięcie cienia i ustawienie stylów dla klona
+      clone.classList.remove('shadow-2xl'); 
       clone.style.position = 'absolute';
       clone.style.top = '0';
       clone.style.left = '-9999px';
       clone.style.width = '210mm';
       clone.style.height = 'auto';
       clone.style.transform = 'none';
+      clone.style.margin = '0';
+      
       document.body.appendChild(clone);
 
       try {
         const scale = 3;
-        const unbreakableElements = Array.from(clone.querySelectorAll('.mb-6, .list-disc > li'));
+        
+        // FIX 2: Dodano .cv-logo-wrapper do listy elementów, których nie wolno przecinać
+        const unbreakableElements = Array.from(clone.querySelectorAll('.mb-6, .list-disc > li, .cv-logo-wrapper'));
+        
         const elementPositions = unbreakableElements.map(el => ({
             top: el.offsetTop * scale,
             bottom: (el.offsetTop + el.offsetHeight) * scale
@@ -75,6 +136,7 @@
           logging: false,
           height: clone.scrollHeight,
           windowHeight: clone.scrollHeight,
+          scrollY: -window.scrollY
         });
 
         const { jsPDF } = window.jspdf;
@@ -112,6 +174,7 @@
                     break;
                 }
             }
+            
             if (lastElementBeforeCut && lastElementBeforeCut.bottom > proposedCutPx && lastElementBeforeCut.top > startY_px) {
               actualCutPx = lastElementBeforeCut.top;
             }
@@ -125,6 +188,9 @@
           pageCanvas.width = sourceWidthPx;
           pageCanvas.height = heightToCopy_px;
           const pageCtx = pageCanvas.getContext('2d');
+
+          pageCtx.fillStyle = '#ffffff';
+          pageCtx.fillRect(0, 0, sourceWidthPx, heightToCopy_px);
 
           pageCtx.drawImage(
             sourceCanvas,
@@ -163,7 +229,7 @@
 
     // --- COMPONENTS/ICONS.TSX ---
     const CoveboLogo = (props) => React.createElement('img', { 
-        src: "logo-covebo.png", // Odwołanie do pliku
+        src: "logo-covebo.png", 
         alt: "Covebo Agencja Zatrudnienia",
         ...props
     });
@@ -190,7 +256,8 @@
     const SectionTitle = ({ children }) => React.createElement('h2', { className: "text-[#E31D2A] text-lg tracking-[0.3em] font-semibold mb-6 uppercase" }, children);
 
     const CvPreview = ({ cvData, id, className }) => {
-      const { name, profilePictureUrl, dob, personalDetails, skills, languages, workExperience, education } = cvData;
+      // Use croppedProfilePictureUrl if available, otherwise fallback to original
+      const { name, profilePictureUrl, croppedProfilePictureUrl, dob, personalDetails, skills, languages, workExperience, education } = cvData;
       const baseClasses = "bg-white text-black min-h-[297mm] shadow-2xl flex flex-col";
       
       const headerHeight = 140;
@@ -200,25 +267,36 @@
 
       return React.createElement('div', { id: id, className: `${baseClasses} ${className}`, style: { fontFamily: "'Poppins', sans-serif" } },
         React.createElement('header', { 
-          className: "bg-[#E31D2A] text-white relative flex items-center justify-center",
+          className: "bg-[#E31D2A] text-white relative",
           style: { height: `${headerHeight}px` }
         },
-          React.createElement('div', { className: 'text-center px-4' },
-            React.createElement('h1', { className: "text-4xl md:text-5xl font-bold leading-tight tracking-wide break-words max-w-xl mx-auto" }, name || 'Imię i Nazwisko')
-          ),
-          React.createElement('div', { className: "absolute top-4 right-4 flex flex-col gap-3" },
-            React.createElement('div', { className: "w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50 shrink-0" },
-              React.createElement(ConveyorIcon, { className: "w-6 h-6" })
+          React.createElement('div', { className: "flex items-center w-full h-full px-4 md:px-10" },
+            React.createElement('div', { className: "w-12 shrink-0" }),
+            // FIX 3: Zmieniono padding: pl-[180px] (lewo - dla zdjęcia) i pr-12 (prawo - żeby nie wychodziło poza obrys)
+            React.createElement('div', { className: 'text-center pr-12 pl-[180px] flex-grow' },
+              // FIX 4: Zmniejszono nieznacznie rozmiar czcionki (md:text-4xl) aby długie nazwiska lepiej się mieściły
+              React.createElement('h1', { className: "text-4xl md:text-4xl font-bold leading-tight tracking-wide break-words max-w-xl mx-auto" }, name || 'Imię i Nazwisko')
             ),
-            React.createElement('div', { className: "w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50 shrink-0" },
-              React.createElement(ScannerIcon, { className: "w-6 h-6" })
+            React.createElement('div', { className: "flex flex-col gap-3 w-12 shrink-0" },
+              React.createElement('div', { className: "w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50" },
+                React.createElement(ConveyorIcon, { className: "w-6 h-6" })
+              ),
+              React.createElement('div', { className: "w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50" },
+                React.createElement(ScannerIcon, { className: "w-6 h-6" })
+              )
             )
           ),
           React.createElement('div', { 
             className: "absolute left-10 rounded-full bg-white p-2 shadow-lg",
             style: { top: `${profileImageTop}px`, width: `${profileImageSize}px`, height: `${profileImageSize}px` }
           },
-            React.createElement('img', { src: profilePictureUrl || `https://picsum.photos/seed/${name || 'placeholder'}/180`, alt: name, className: "w-full h-full rounded-full object-cover" })
+            React.createElement('img', { 
+                // Now uses croppedProfilePictureUrl directly
+                src: croppedProfilePictureUrl || `https://picsum.photos/seed/${name || 'placeholder'}/180`, 
+                alt: name, 
+                className: "w-full h-full rounded-full object-cover",
+                style: { objectPosition: `50% 50%` } // object-position no longer needed here as image is pre-cropped
+            })
           )
         ),
         React.createElement('main', { 
@@ -254,32 +332,34 @@
             )
           ),
           React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2 flex flex-col" },
-            React.createElement('div', { className: "flex-grow" },
+            React.createElement('div', null,
                 workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
                 React.createElement(SectionTitle, null, "Doświadczenie"),
                 workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-6" },
-                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${exp.jobTitle}, ${exp.company}`),
-                    React.createElement('p', { className: "text-xs text-black my-2" }, exp.dateRange),
-                    React.createElement('ul', { className: "list-disc pl-5 text-xs space-y-1" },
-                    exp.tasks.map(task => React.createElement('li', { key: task.id, className: "break-words" }, task.text))
-                    )
+                  React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${exp.jobTitle}, ${exp.company}`),
+                  React.createElement('p', { className: "text-xs text-black my-2" }, exp.dateRange),
+                  React.createElement('ul', { className: "list-disc pl-5 text-xs space-y-1" },
+                  exp.tasks.map(task => React.createElement('li', { key: task.id, className: "break-words" }, task.text))
+                  )
                 ))
                 ),
                 education && education.length > 0 && React.createElement('div', { className: "mt-8" },
                 React.createElement(SectionTitle, null, "Edukacja"),
                 education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-6" },
-                    React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${edu.degree}, ${edu.schoolName}`),
-                    React.createElement('p', { className: "text-xs text-black my-2" }, edu.dateRange),
-                    edu.description && React.createElement('p', { className: "text-xs mt-1 break-words" }, edu.description)
+                  React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${edu.degree}, ${edu.schoolName}`),
+                  React.createElement('p', { className: "text-xs text-black my-2" }, edu.dateRange),
+                  edu.description && React.createElement('p', { className: "text-xs mt-1 break-words" }, edu.description)
                 ))
                 )
             ),
-            React.createElement('div', { className: 'pt-6 flex justify-end' },
-                React.createElement('img', {
-                    src: "logo-covebo.png",
-                    alt: "Covebo Logo",
-                    className: "w-24 h-auto"
-                })
+            React.createElement('div', { className: 'flex-grow min-h-[24px]' }),
+            // FIX 4: Klasa cv-logo-wrapper dla łatwego identyfikowania
+            React.createElement('div', { className: 'pt-6 flex justify-end cv-logo-wrapper' },
+              React.createElement('img', {
+                  src: "logo-covebo.png",
+                  alt: "Covebo Logo",
+                  className: "w-24 h-auto block"
+              })
             )
           )
         )
@@ -297,6 +377,79 @@
       children
     );
 
+    // --- NEW COMPONENT: ImageCropper ---
+    const ImageCropper = ({ imageUrl, position, onPositionChange }) => {
+      const [isDragging, setIsDragging] = useState(false);
+      const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+      const [startImgPos, setStartImgPos] = useState({ x: 0, y: 0 });
+      const containerRef = useRef(null);
+
+      const handleMouseDown = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        setStartPos({ x: e.clientX, y: e.clientY });
+        setStartImgPos({ ...position });
+      };
+
+      const handleMouseMove = (e) => {
+        if (!isDragging || !containerRef.current) return;
+        const dx = e.clientX - startPos.x;
+        const dy = e.clientY - startPos.y;
+        
+        // Adjust sensitivity based on the container size to make dragging intuitive
+        const containerWidth = containerRef.current.offsetWidth;
+        const containerHeight = containerRef.current.offsetHeight;
+        
+        // Calculate the maximum possible offset for the image to still cover the circle
+        // This is a rough estimate and might need fine-tuning based on image aspect ratio
+        // For simplicity, we assume image fills at least 100% of the circle dimension.
+        // A smaller sensitivity means you drag less to move the image more.
+        const sensitivityX = 100 / (containerWidth * 2); // Divide by 2 to make it less sensitive
+        const sensitivityY = 100 / (containerHeight * 2);
+
+        let newX = startImgPos.x - (dx * sensitivityX);
+        let newY = startImgPos.y - (dy * sensitivityY);
+
+        newX = Math.max(0, Math.min(100, newX));
+        newY = Math.max(0, Math.min(100, newY));
+
+        onPositionChange({ x: newX, y: newY });
+      };
+
+      const handleMouseUp = () => setIsDragging(false);
+
+      useEffect(() => {
+        if (isDragging) {
+          window.addEventListener('mousemove', handleMouseMove);
+          window.addEventListener('mouseup', handleMouseUp);
+        } else {
+          window.removeEventListener('mousemove', handleMouseMove);
+          window.removeEventListener('mouseup', handleMouseUp);
+        }
+        return () => {
+          window.removeEventListener('mousemove', handleMouseMove);
+          window.removeEventListener('mouseup', handleMouseUp);
+        };
+      }, [isDragging, handleMouseMove]);
+
+      return React.createElement('div', { className: "mt-4" },
+        React.createElement('p', { className: "text-xs font-bold text-gray-700 mb-2" }, "Przesuń zdjęcie myszką, aby wykadrować:"),
+        React.createElement('div', { 
+            ref: containerRef,
+            className: "w-32 h-32 rounded-full overflow-hidden border-2 border-red-500 cursor-grab active:cursor-grabbing relative mx-auto bg-gray-200 shadow-sm",
+            onMouseDown: handleMouseDown,
+            title: "Chwyć i przesuń"
+        },
+            React.createElement('img', {
+                src: imageUrl,
+                className: "w-full h-full object-cover pointer-events-none",
+                style: { objectPosition: `${position.x}% ${position.y}%` }
+            })
+        ),
+        React.createElement('p', { className: "text-[10px] text-gray-400 text-center mt-2" }, "Podgląd kadrowania")
+      );
+    };
+
     const CvForm = ({ cvData, setCvData }) => {
       const handleFieldChange = (field, value) => {
         setCvData(prev => ({ ...prev, [field]: value }));
@@ -307,7 +460,7 @@
         if (file) {
           const reader = new FileReader();
           reader.onloadend = () => {
-            setCvData(prev => ({ ...prev, profilePictureUrl: reader.result }));
+            setCvData(prev => ({ ...prev, profilePictureUrl: reader.result, imagePosition: { x: 50, y: 50 } })); // Reset position on new upload
           };
           reader.readAsDataURL(file);
         }
@@ -367,7 +520,7 @@
             newItem = { id, jobTitle: '', company: '', dateRange: '', tasks: [{ id: generateUniqueId(), text: '' }] };
             break;
           case 'education':
-            newItem = { id, schoolName: '', degree: '', dateRange: '', description: '' };
+            newItem = { id, degree: '', schoolName: '', dateRange: '', description: '' };
             break;
           default:
             return;
@@ -375,188 +528,180 @@
         setCvData(prev => ({ ...prev, [section]: [...prev[section], newItem] }));
       };
 
-      const removeItem = (section, id) => {
-        setCvData(prev => ({ ...prev, [section]: prev[section].filter(item => item.id !== id) }));
+      const removeItem = (section, itemId) => {
+        setCvData(prev => ({
+          ...prev,
+          [section]: prev[section].filter(item => item.id !== itemId)
+        }));
       };
 
-      return React.createElement('div', { className: "space-y-6" },
-        React.createElement(Section, { title: "Podstawowe informacje" },
-          React.createElement(Input, { label: "Imię i nazwisko", value: cvData.name, onChange: e => handleFieldChange('name', e.target.value), placeholder: "Jan Kowalski" }),
+      const renderWorkExperience = () => cvData.workExperience.map((work) => React.createElement(Section, { key: work.id, title: work.jobTitle || "Nowe doświadczenie zawodowe" },
+        React.createElement(Input, { label: "Stanowisko", value: work.jobTitle, onChange: (e) => handleDynamicChange('workExperience', work.id, 'jobTitle', e.target.value) }),
+        React.createElement(Input, { label: "Firma", value: work.company, onChange: (e) => handleDynamicChange('workExperience', work.id, 'company', e.target.value) }),
+        React.createElement(Input, { label: "Okres (np. 01.2020 - 12.2023)", value: work.dateRange, onChange: (e) => handleDynamicChange('workExperience', work.id, 'dateRange', e.target.value) }),
+        React.createElement('div', { className: "mb-3" },
+          React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Zakres obowiązków (lista)"),
+          work.tasks.map((task) => React.createElement('div', { key: task.id, className: "flex items-center space-x-2 mb-2" },
+            React.createElement('input', { type: "text", value: task.text, onChange: (e) => handleTaskChange(work.id, task.id, e.target.value), placeholder: "Obowiązek...", className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
+            React.createElement('button', { type: "button", onClick: () => removeTask(work.id, task.id), className: "text-red-500 hover:text-red-700 text-lg p-1" }, "\u00D7")
+          )),
+          React.createElement('button', { type: "button", onClick: () => addTask(work.id), className: "mt-2 text-xs text-blue-600 hover:text-blue-800" }, " + Dodaj obowiązek")
+        ),
+        React.createElement('button', { type: "button", onClick: () => removeItem('workExperience', work.id), className: "mt-4 text-xs text-red-600 hover:text-red-800" }, "Usuń to doświadczenie")
+      ));
+
+      const renderEducation = () => cvData.education.map((edu) => React.createElement(Section, { key: edu.id, title: edu.degree || "Nowa szkoła/kurs" },
+        React.createElement(Input, { label: "Stopień/Kwalifikacja", value: edu.degree, onChange: (e) => handleDynamicChange('education', edu.id, 'degree', e.target.value) }),
+        React.createElement(Input, { label: "Nazwa instytucji", value: edu.schoolName, onChange: (e) => handleDynamicChange('education', edu.id, 'schoolName', e.target.value) }),
+        React.createElement(Input, { label: "Okres (np. 09.2015 - 06.2019)", value: edu.dateRange, onChange: (e) => handleDynamicChange('education', edu.id, 'dateRange', e.target.value) }),
+        React.createElement('div', { className: "mb-3" },
+          React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Opis (opcjonalnie)"),
+          React.createElement('textarea', { value: edu.description, onChange: (e) => handleDynamicChange('education', edu.id, 'description', e.target.value), placeholder: "Krótki opis kierunku/szkoły...", className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500" })
+        ),
+        React.createElement('button', { type: "button", onClick: () => removeItem('education', edu.id), className: "mt-4 text-xs text-red-600 hover:text-red-800" }, "Usuń tę edukację")
+      ));
+
+      const renderSimpleList = (section, title, placeholder) => React.createElement(Section, { title: title },
+        cvData[section].map((item) => React.createElement('div', { key: item.id, className: "flex items-center space-x-2 mb-2" },
+          React.createElement('input', { type: "text", value: item.text, onChange: (e) => handleDynamicChange(section, item.id, 'text', e.target.value), placeholder: placeholder, className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
+          React.createElement('button', { type: "button", onClick: () => removeItem(section, item.id), className: "text-red-500 hover:text-red-700 text-lg p-1" }, "\u00D7")
+        )),
+        React.createElement('button', { type: "button", onClick: () => addItem(section), className: "mt-2 text-xs text-blue-600 hover:text-blue-800" }, `+ Dodaj ${title.toLowerCase().slice(0, -1)}`)
+      );
+
+      return React.createElement('div', { id: "cv-form-container", className: "p-6 bg-white shadow-xl h-full overflow-y-auto w-full md:w-1/2 lg:w-2/5" },
+        React.createElement('h2', { className: "text-2xl font-bold text-red-700 mb-6" }, "Edytor CV"),
+        React.createElement(Section, { title: "Dane Podstawowe" },
+          React.createElement(Input, { label: "Imię i Nazwisko", value: cvData.name, onChange: (e) => handleFieldChange('name', e.target.value), placeholder: "Jan Kowalski" }),
+          React.createElement(Input, { label: "Data urodzenia", value: cvData.dob, onChange: (e) => handleFieldChange('dob', e.target.value), placeholder: "01.01.1990" }),
           React.createElement('div', { className: "mb-3" },
-            React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Zdjęcie profilowe"),
-            React.createElement('input', { type: "file", accept: "image/*", onChange: handleImageUpload, className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" })
+            React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Zdjęcie Profilowe"),
+            React.createElement('input', { type: "file", onChange: handleImageUpload, accept: "image/*", className: "w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" })
           ),
-          React.createElement(Input, { label: "Data urodzenia", value: cvData.dob, onChange: e => handleFieldChange('dob', e.target.value), placeholder: "16/10/1985" })
+          cvData.profilePictureUrl && React.createElement(ImageCropper, {
+            imageUrl: cvData.profilePictureUrl,
+            position: cvData.imagePosition,
+            onPositionChange: (newPos) => handleFieldChange('imagePosition', newPos)
+          })
         ),
-        React.createElement(Section, { title: "Doświadczenie zawodowe" },
-          cvData.workExperience.map((exp) =>
-            React.createElement('div', { key: exp.id, className: "p-3 border rounded-md mb-3 bg-white relative" },
-              React.createElement('button', { onClick: () => removeItem('workExperience', exp.id), className: "absolute top-1 right-2 text-red-500 hover:text-red-700 text-2xl font-light" }, "×"),
-              React.createElement('input', { placeholder: "Stanowisko", value: exp.jobTitle, onChange: e => handleDynamicChange('workExperience', exp.id, 'jobTitle', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-              React.createElement('input', { placeholder: "Firma", value: exp.company, onChange: e => handleDynamicChange('workExperience', exp.id, 'company', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-              React.createElement('input', { placeholder: "Okres", value: exp.dateRange, onChange: e => handleDynamicChange('workExperience', exp.id, 'dateRange', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-              React.createElement('div', { className: "mt-3 pt-2 border-t" },
-                React.createElement('p', { className: "text-xs font-semibold mb-1 text-gray-500" }, "Zadania:"),
-                exp.tasks.map((task) =>
-                  React.createElement('div', { key: task.id, className: "flex gap-2 items-center mb-1" },
-                    React.createElement('input', { type: "text", placeholder: "Opis zadania", value: task.text, onChange: e => handleTaskChange(exp.id, task.id, e.target.value), className: "flex-grow border border-gray-200 rounded-md p-1 text-sm" }),
-                    React.createElement('button', { onClick: () => removeTask(exp.id, task.id), className: "text-gray-400 hover:text-red-500 text-xl leading-none font-light p-1" }, "–")
-                  )
-                ),
-                React.createElement('button', { onClick: () => addTask(exp.id), className: "mt-2 text-xs text-red-600 font-semibold flex items-center gap-1" },
-                  React.createElement('span', { className: "text-lg leading-none" }, "+"), "Dodaj Zadanie"
-                )
-              )
-            )
-          ),
-          React.createElement('button', { onClick: () => addItem('workExperience'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj doświadczenie")
+        renderSimpleList('personalDetails', 'Uprawnienia (np. Prawo Jazdy, SEP)', 'Wózek widłowy...'),
+        renderSimpleList('languages', 'Znajomość Języków Obcych', 'Angielski B1'),
+        renderSimpleList('skills', 'Dodatkowe Umiejętności', 'Obsługa maszyn CNC'),
+        
+        React.createElement(Section, { title: "Doświadczenie Zawodowe" },
+          renderWorkExperience(),
+          React.createElement('button', { type: "button", onClick: () => addItem('workExperience'), className: "mt-4 w-full py-2 px-4 border border-red-500 text-red-600 rounded-md hover:bg-red-50 font-medium transition duration-150" }, " + Dodaj nowe doświadczenie")
         ),
-        React.createElement(Section, { title: "Uprawnienia", key: "personalDetails" },
-          cvData.personalDetails.map((item) =>
-            React.createElement('div', { key: item.id, className: "flex gap-2 items-center mb-2" },
-              React.createElement('input', { type: "text", placeholder: "np. EUROPEAN CERTIFICATE forklift driver", value: item.text, onChange: e => handleDynamicChange('personalDetails', item.id, 'text', e.target.value), className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
-              React.createElement('button', { onClick: () => removeItem('personalDetails', item.id), className: "text-red-500 hover:text-red-700 text-2xl font-light" }, "×")
-            )
-          ),
-          React.createElement('button', { onClick: () => addItem('personalDetails'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj")
+
+        React.createElement(Section, { title: "Edukacja" },
+          renderEducation(),
+          React.createElement('button', { type: "button", onClick: () => addItem('education'), className: "mt-4 w-full py-2 px-4 border border-red-500 text-red-600 rounded-md hover:bg-red-50 font-medium transition duration-150" }, " + Dodaj nowy wpis edukacyjny")
         ),
-        React.createElement(Section, { title: "Znajomość języków obcych", key: "languages" },
-            cvData.languages.map((item) =>
-              React.createElement('div', { key: item.id, className: "flex gap-2 items-center mb-2" },
-                React.createElement('input', { type: "text", placeholder: "np. Angielski - komunikatywny", value: item.text, onChange: e => handleDynamicChange('languages', item.id, 'text', e.target.value), className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
-                React.createElement('button', { onClick: () => removeItem('languages', item.id), className: "text-red-500 hover:text-red-700 text-2xl font-light" }, "×")
-              )
-            ),
-            React.createElement('button', { onClick: () => addItem('languages'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj")
-        ),
-        React.createElement(Section, { title: "Dodatkowe umiejętności", key: "skills" },
-            cvData.skills.map((item) =>
-              React.createElement('div', { key: item.id, className: "flex gap-2 items-center mb-2" },
-                React.createElement('input', { type: "text", placeholder: "np. Obsługa wózka widłowego", value: item.text, onChange: e => handleDynamicChange('skills', item.id, 'text', e.target.value), className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
-                React.createElement('button', { onClick: () => removeItem('skills', item.id), className: "text-red-500 hover:text-red-700 text-2xl font-light" }, "×")
-              )
-            ),
-            React.createElement('button', { onClick: () => addItem('skills'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj")
-        ),
-        React.createElement(Section, { title: "Wykształcenie" },
-          cvData.education.map((edu) =>
-            React.createElement('div', { key: edu.id, className: "p-3 border rounded-md mb-3 bg-white relative" },
-              React.createElement('button', { onClick: () => removeItem('education', edu.id), className: "absolute top-1 right-2 text-red-500 hover:text-red-700 text-2xl font-light" }, "×"),
-              React.createElement('input', { placeholder: "Nazwa szkoły/uczelni", value: edu.schoolName, onChange: e => handleDynamicChange('education', edu.id, 'schoolName', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-              React.createElement('input', { placeholder: "Kierunek/Stopień", value: edu.degree, onChange: e => handleDynamicChange('education', edu.id, 'degree', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-              React.createElement('input', { placeholder: "Okres", value: edu.dateRange, onChange: e => handleDynamicChange('education', edu.id, 'dateRange', e.target.value), className: "w-full border-b p-1 mb-2 text-sm" }),
-              React.createElement('textarea', { placeholder: "Dodatkowy opis", value: edu.description, onChange: e => handleDynamicChange('education', edu.id, 'description', e.target.value), className: "w-full border p-1 text-sm mt-2 rounded-md", rows: 2 })
-            )
-          ),
-          React.createElement('button', { onClick: () => addItem('education'), className: "mt-2 text-sm text-red-600 font-semibold" }, "+ Dodaj wykształcenie")
+
+        React.createElement('div', { className: "mt-8 sticky bottom-0 bg-white pt-4 pb-4 border-t" },
+          React.createElement('button', { 
+            type: "button", 
+            onClick: () => generatePdf('cv-document'), 
+            className: "w-full bg-red-600 text-white py-3 rounded-lg font-semibold shadow-md hover:bg-red-700 transition duration-200" 
+          }, "Pobierz CV jako PDF")
         )
       );
     };
-
+    
     // --- APP.TSX ---
-    const initialCvData = {
-      name: '',
-      profilePictureUrl: '',
-      dob: '',
-      personalDetails: [],
-      skills: [],
-      languages: [],
-      workExperience: [],
-      education: []
+    const defaultData = {
+      name: 'Jan Kowalski',
+      dob: '01.01.1990',
+      profilePictureUrl: 'https://placehold.co/180x180/E31D2A/ffffff?text=ZDJĘCIE',
+      croppedProfilePictureUrl: 'https://placehold.co/180x180/E31D2A/ffffff?text=ZDJĘCIE',
+      imagePosition: { x: 50, y: 50 },
+      personalDetails: [
+        { id: generateUniqueId(), text: 'Prawo jazdy kat. B' },
+        { id: generateUniqueId(), text: 'Uprawnienia na wózki widłowe' },
+      ],
+      skills: [
+        { id: generateUniqueId(), text: 'Obsługa pakowarki automatycznej' },
+        { id: generateUniqueId(), text: 'Podstawowa obsługa komputera (MS Office)' },
+      ],
+      languages: [
+        { id: generateUniqueId(), text: 'Angielski - komunikatywny (B1)' },
+      ],
+      workExperience: [
+        {
+          id: generateUniqueId(),
+          jobTitle: 'Pracownik Produkcji',
+          company: 'Fabryka Mebli "Drzewko"',
+          dateRange: '03.2020 - obecnie',
+          tasks: [
+            { id: generateUniqueId(), text: 'Obsługa maszyn stolarskich i narzędzi ręcznych' },
+            { id: generateUniqueId(), text: 'Montaż komponentów meblowych zgodnie z instrukcją' },
+            { id: generateUniqueId(), text: 'Kontrola jakości gotowych produktów' }
+          ]
+        },
+        {
+          id: generateUniqueId(),
+          jobTitle: 'Magazynier',
+          company: 'Centrum Logistyczne "Szybkie Paczki"',
+          dateRange: '08.2018 - 02.2020',
+          tasks: [
+            { id: generateUniqueId(), text: 'Przyjmowanie i wydawanie towaru z magazynu' },
+            { id: generateUniqueId(), text: 'Kompletacja zamówień i przygotowanie do wysyłki' },
+            { id: generateUniqueId(), text: 'Obsługa skanera magazynowego' }
+          ]
+        }
+      ],
+      education: [
+        {
+          id: generateUniqueId(),
+          degree: 'Technik Logistyk',
+          schoolName: 'Zespół Szkół Zawodowych w Poznaniu',
+          dateRange: '09.2014 - 06.2018',
+          description: 'Specjalizacja: Zarządzanie transportem i zapasami.'
+        }
+      ]
     };
+    
+    const App = () => {
+      const [cvData, setCvData] = useState(defaultData);
+      const [view, setView] = useState('form'); // 'form' or 'preview'
 
-    function App() {
-      const [cvData, setCvData] = useState(initialCvData);
-      const [mobileView, setMobileView] = useState('form');
-
+      // Efekt do generowania wykadrowanego obrazu po zmianie URL lub pozycji
       useEffect(() => {
-        document.body.className = `bg-gray-100 mobile-view-${mobileView}`;
-      }, [mobileView]);
-      
-      const handleDownloadPdf = async () => {
-        try {
-          await generatePdf('cv-to-print');
-        } catch (error) {
-          console.error("Failed to generate PDF", error);
-          alert("Błąd podczas generowania PDF. Sprawdź konsolę, aby uzyskać więcej informacji.");
-        }
-      };
+        const updateCroppedImage = async () => {
+            const croppedUrl = await getRoundedCanvasCroppedImage(cvData.profilePictureUrl, cvData.imagePosition);
+            setCvData(prev => ({ ...prev, croppedProfilePictureUrl: croppedUrl || prev.profilePictureUrl }));
+        };
+        updateCroppedImage();
+      }, [cvData.profilePictureUrl, cvData.imagePosition]);
 
-      const handleShare = async (type) => {
-        try {
-          const pdfFile = await generatePdfBlob('cv-to-print', `CV_${cvData.name.replace(/\s/g, '_') || 'Kandydat'}.pdf`);
-          const shareData = {
-            title: `CV - ${cvData.name}`,
-            text: type === 'email' ? `Przesyłam w załączeniu moje CV.\n\nPozdrawiam,\n${cvData.name}` : `Przesyłam moje CV`,
-            files: [pdfFile]
-          };
 
-          if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-            await navigator.share(shareData);
-          } else {
-            const url = URL.createObjectURL(pdfFile);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = pdfFile.name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            if (type === 'email') {
-              const subject = `CV - ${cvData.name}`;
-              const body = `Dzień dobry,\n\nW załączeniu przesyłam moje CV (plik został pobrany automatycznie).\n\nPozdrawiam,\n${cvData.name}`;
-              const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-              window.location.href = mailtoUrl;
-              setTimeout(() => {
-                alert('PDF zostało pobrane.\nOkno email zostało otwarte - pamiętaj załączyć pobrany plik!')
-              }, 1000);
-            } else {
-              alert('PDF zostało pobrane. Teraz możesz je ręcznie udostępnić przez WhatsApp:\n\n1. Otwórz WhatsApp\n2. Wybierz rozmowę\n3. Kliknij ikonę załącznika\n4. Wybierz pobrany plik CV');
-            }
-          }
-        } catch (error) {
-          console.error("Share failed", error);
-          alert("Błąd podczas udostępniania. Spróbuj najpierw pobrać PDF przyciskiem 'Pobierz PDF'.");
-        }
-      };
-
-      return React.createElement('div', { className: "min-h-screen flex flex-col items-center p-4 md:p-8" },
-        React.createElement('header', { className: "w-full max-w-7xl mb-6 bg-white p-4 rounded-lg shadow-lg flex justify-between items-center flex-wrap gap-4" },
-          React.createElement('h1', { className: "text-xl font-bold text-gray-800" }, "Generator CV Covebo"),
-          React.createElement('div', { className: "flex flex-wrap space-x-2" },
-            React.createElement('button', { onClick: handleDownloadPdf, className: "bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-150 items-center gap-2 " + (mobileView === 'preview' ? 'inline-flex' : 'hidden') + " md:inline-flex" }, "Pobierz PDF"),
-            React.createElement('button', { onClick: () => handleShare('whatsapp'), className: "bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-150 flex items-center gap-2" }, "Udostępnij (WhatsApp)"),
-            React.createElement('button', { onClick: () => handleShare('email'), className: "bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-md transition duration-150 flex items-center gap-2" }, "Udostępnij (Email)")
-          )
+      return React.createElement('div', { className: `min-h-screen flex flex-col md:flex-row ${view === 'form' ? 'mobile-view-form' : 'mobile-view-preview'}` },
+        // Mobile View Toggles
+        React.createElement('div', { className: "md:hidden bg-white p-4 border-b flex justify-around sticky top-0 z-10 shadow-sm" },
+            React.createElement('button', {
+                onClick: () => setView('form'),
+                className: `px-4 py-2 text-sm font-medium rounded-lg transition ${view === 'form' ? 'bg-red-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`
+            }, "Edytor"),
+            React.createElement('button', {
+                onClick: () => setView('preview'),
+                className: `px-4 py-2 text-sm font-medium rounded-lg transition ${view === 'preview' ? 'bg-red-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`
+            }, "Podgląd")
         ),
-        React.createElement('div', { className: "w-full max-w-7xl mb-4 flex md:hidden justify-center space-x-4" },
-          React.createElement('button', { onClick: () => setMobileView('form'), className: `py-2 px-4 rounded-lg font-semibold transition ${mobileView === 'form' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}` }, "Formularz"),
-          React.createElement('button', { onClick: () => setMobileView('preview'), className: `py-2 px-4 rounded-lg font-semibold transition ${mobileView === 'preview' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}` }, "Podgląd")
-        ),
-        React.createElement('div', { className: "w-full max-w-7xl flex flex-col md:flex-row gap-8" },
-          React.createElement('div', { id: "cv-form-container", className: "w-full md:w-1/2" },
-            React.createElement('div', { id: "cv-form", className: "bg-white p-6 rounded-lg shadow-xl h-full" },
-              React.createElement(CvForm, { cvData: cvData, setCvData: setCvData })
-            )
-          ),
-          React.createElement('div', { id: "cv-preview-container", className: "w-full md:w-1/2 flex justify-center md:justify-start" },
-            React.createElement('div', { id: "cv-preview", className: "w-full md:w-auto md:scale-[0.8] lg:scale-[0.9] md:origin-top" },
-              React.createElement(CvPreview, { cvData: cvData, id: "cv-to-print", className: "w-full md:w-[210mm]" })
-            )
-          )
+
+        // CV Form (lewa strona)
+        React.createElement(CvForm, { cvData: cvData, setCvData: setCvData }),
+
+        // CV Preview (prawa strona)
+        React.createElement('div', { id: "cv-preview-container", className: "p-6 md:p-10 flex justify-center bg-gray-100 flex-grow w-full md:w-1/2 lg:w-3/5 overflow-y-auto" },
+          React.createElement(CvPreview, { cvData: cvData, id: "cv-document", className: "w-[210mm] max-w-full h-auto min-h-fit" })
         )
       );
-    }
+    };
 
-    // --- RENDER APP ---
-    const container = document.getElementById('root');
-    if (container) {
-      const root = ReactDOM.createRoot(container);
-      root.render(React.createElement(App));
-    } else {
-      console.error('Root element not found');
-    }
+    // Render the App
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      React.createElement(React.StrictMode, null, React.createElement(App))
+    );
   </script>
 </body>
 </html>

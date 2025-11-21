@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Generator CV - Covebo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    body { font-family: 'Poppins', sans-serif; }
+    body { font-family: 'Poppins', sans-serif; touch-action: pan-x pan-y; }
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
@@ -38,7 +38,7 @@
 }
 </script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 overscroll-none">
   <div id="root"></div>
   <script type="module">
     import React, { useState, useEffect, useRef } from 'react';
@@ -118,6 +118,9 @@
       clone.style.height = 'auto';
       clone.style.transform = 'none';
       clone.style.margin = '0';
+      // Reset zoom for PDF generation
+      clone.style.zoom = '1'; 
+      clone.style.transform = 'none';
       
       document.body.appendChild(clone);
 
@@ -276,12 +279,11 @@
           className: "bg-[#E31D2A] text-white relative",
           style: { height: `${headerHeight}px` }
         },
-          React.createElement('div', { className: "flex items-center w-full h-full px-4 md:px-10" },
+          // MODIFIED: Enforced desktop padding (px-10) instead of mobile responsiveness
+          React.createElement('div', { className: "flex items-center w-full h-full px-10" },
             React.createElement('div', { className: "w-12 shrink-0" }),
-            // FIX 3: Zmieniono padding: pl-[180px] (lewo - dla zdjęcia) i pr-12 (prawo - żeby nie wychodziło poza obrys)
             React.createElement('div', { className: 'text-center pr-12 pl-[180px] flex-grow' },
-              // FIX 4: Zmniejszono nieznacznie rozmiar czcionki (md:text-4xl) aby długie nazwiska lepiej się mieściły
-              React.createElement('h1', { className: "text-4xl md:text-4xl font-bold leading-tight tracking-wide break-words max-w-xl mx-auto" }, name || 'Imię i Nazwisko')
+              React.createElement('h1', { className: "text-4xl font-bold leading-tight tracking-wide break-words max-w-xl mx-auto" }, name || 'Imię i Nazwisko')
             ),
             React.createElement('div', { className: "flex flex-col gap-3 w-12 shrink-0" },
               React.createElement('div', { className: "w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50" },
@@ -305,11 +307,13 @@
             })
           )
         ),
+        // MODIFIED: Enforced desktop layout (flex-row) instead of flex-col on mobile
         React.createElement('main', { 
-          className: "flex flex-col md:flex-row flex-grow",
+          className: "flex flex-row flex-grow",
           style: { paddingTop: `${mainPaddingTop}px` }
         },
-          React.createElement('div', { className: "w-full md:w-[38%] p-6 md:pl-10 md:pr-6 md:pb-8 order-2 md:order-1" },
+          // MODIFIED: Enforced desktop widths and order
+          React.createElement('div', { className: "w-[38%] p-6 pl-10 pr-6 pb-8 order-1" },
             React.createElement('div', { className: "bg-gray-100 p-6 h-full" },
                 React.createElement('div', null,
                   dob && React.createElement('div', { className: "mb-6" },
@@ -337,7 +341,8 @@
                 )
             )
           ),
-          React.createElement('div', { className: "w-full md:w-[62%] p-6 md:pr-10 order-1 md:order-2 flex flex-col" },
+          // MODIFIED: Enforced desktop widths and order
+          React.createElement('div', { className: "w-[62%] p-6 pr-10 order-2 flex flex-col" },
             React.createElement('div', null,
                 workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
                 React.createElement(SectionTitle, null, "Doświadczenie"),
@@ -546,6 +551,9 @@
           case 'education':
             newItem = { id, degree: '', schoolName: '', dateRange: '', description: '' };
             break;
+          case 'education':
+            newItem = { id, degree: '', schoolName: '', dateRange: '', description: '' };
+            break;
           default:
             return;
         }
@@ -691,6 +699,40 @@
       const [cvData, setCvData] = useState(defaultData);
       const [view, setView] = useState('form'); // 'form' or 'preview'
 
+      // --- PINCH TO ZOOM LOGIC ---
+      const [zoomLevel, setZoomLevel] = useState(1);
+      const [pinchDistance, setPinchDistance] = useState(null);
+      const [pinchStartZoom, setPinchStartZoom] = useState(1);
+      
+      const handleTouchStart = (e) => {
+        if (e.touches.length === 2) {
+          const dist = Math.hypot(
+            e.touches[0].pageX - e.touches[1].pageX,
+            e.touches[0].pageY - e.touches[1].pageY
+          );
+          setPinchDistance(dist);
+          setPinchStartZoom(zoomLevel);
+        }
+      };
+
+      const handleTouchMove = (e) => {
+        if (e.touches.length === 2 && pinchDistance) {
+          const dist = Math.hypot(
+            e.touches[0].pageX - e.touches[1].pageX,
+            e.touches[0].pageY - e.touches[1].pageY
+          );
+          const delta = dist / pinchDistance;
+          let newZoom = pinchStartZoom * delta;
+          newZoom = Math.max(0.5, Math.min(3, newZoom)); // Limit zoom from 0.5x to 3x
+          setZoomLevel(newZoom);
+          e.preventDefault(); // Prevent default browser zoom actions
+        }
+      };
+
+      const handleTouchEnd = () => {
+        setPinchDistance(null);
+      };
+
       // Efekt do generowania wykadrowanego obrazu po zmianie URL lub pozycji
       useEffect(() => {
         const updateCroppedImage = async () => {
@@ -717,8 +759,15 @@
         // CV Form (lewa strona)
         React.createElement(CvForm, { cvData: cvData, setCvData: setCvData }),
 
-        // CV Preview (prawa strona) - MODIFIED to include Toolbar
-        React.createElement('div', { id: "cv-preview-container", className: "bg-gray-100 flex-grow w-full md:w-1/2 lg:w-3/5 overflow-y-auto flex flex-col" },
+        // CV Preview (prawa strona) - MODIFIED to include Toolbar, horizontal scrolling, and PINCH ZOOM
+        React.createElement('div', { 
+            id: "cv-preview-container", 
+            className: "bg-gray-100 flex-grow w-full md:w-1/2 lg:w-3/5 overflow-y-auto overflow-x-auto flex flex-col touch-pan-x touch-pan-y",
+            // Attach pinch handlers to the container
+            onTouchStart: handleTouchStart,
+            onTouchMove: handleTouchMove,
+            onTouchEnd: handleTouchEnd
+        },
             // Toolbar
             React.createElement('div', { className: "sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b p-3 flex justify-end gap-2 shadow-sm" },
                 React.createElement('button', { 
@@ -736,9 +785,18 @@
                     className: "flex items-center gap-2 bg-[#E31D2A] hover:bg-[#c41924] text-white px-3 py-2 rounded text-xs md:text-sm font-medium transition shadow-sm" 
                 }, React.createElement(DownloadIcon, { className: "w-4 h-4" }), "Pobierz PDF")
             ),
-            // Content Wrapper
-            React.createElement('div', { className: "p-6 md:p-10 flex justify-center" },
-                 React.createElement(CvPreview, { cvData: cvData, id: "cv-document", className: "w-[210mm] max-w-full h-auto min-h-fit" })
+            // Content Wrapper - Applies ZOOM
+            React.createElement('div', { 
+                className: "p-6 md:p-10 flex justify-center min-w-fit",
+                style: { 
+                    // Using 'zoom' property for mobile pinch functionality (works best on mobile webkit)
+                    zoom: zoomLevel,
+                    // Fallback for Firefox/browsers not supporting zoom property:
+                    MozTransform: `scale(${zoomLevel})`,
+                    MozTransformOrigin: "top center"
+                }
+            },
+                 React.createElement(CvPreview, { cvData: cvData, id: "cv-document", className: "w-[210mm] h-auto min-h-fit" })
             )
         )
       );

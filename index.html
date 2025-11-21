@@ -47,67 +47,6 @@
     // --- UTILS ---
     const generateUniqueId = () => new Date().getTime().toString() + Math.random().toString(36).substring(2, 9);
 
-    // Function to crop and round the image on a canvas
-    const getRoundedCanvasCroppedImage = async (imageUrl, position, targetSize = 180) => {
-        if (!imageUrl) return '';
-
-        return new Promise((resolve) => {
-            const img = new Image();
-            // FIX: Enable CORS to prevent tainted canvas errors when using placeholder images
-            img.crossOrigin = "Anonymous";
-            
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = targetSize;
-                canvas.height = targetSize;
-                const ctx = canvas.getContext('2d');
-
-                // Calculate image dimensions to fit/cover
-                const imgAspectRatio = img.width / img.height;
-                const targetAspectRatio = 1; // Square crop
-
-                let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
-                let dx = 0, dy = 0, dWidth = targetSize, dHeight = targetSize;
-
-                if (imgAspectRatio > targetAspectRatio) { // Image is wider than the target square
-                    sHeight = img.height;
-                    sWidth = img.height * targetAspectRatio;
-                    sx = (img.width - sWidth) * (position.x / 100);
-                } else { // Image is taller or same aspect ratio as the target square
-                    sWidth = img.width;
-                    sHeight = img.width / targetAspectRatio;
-                    sy = (img.height - sHeight) * (position.y / 100);
-                }
-                
-                // Ensure source dimensions are positive
-                if (sWidth <= 0 || sHeight <= 0) {
-                    resolve('');
-                    return;
-                }
-
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(targetSize / 2, targetSize / 2, targetSize / 2, 0, Math.PI * 2, true);
-                ctx.closePath();
-                ctx.clip();
-
-                // Draw the image onto the canvas, fitting it correctly
-                ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-
-                ctx.restore();
-
-                try {
-                    resolve(canvas.toDataURL('image/png'));
-                } catch (e) {
-                    console.error("Canvas tainted, returning original URL", e);
-                    resolve(imageUrl);
-                }
-            };
-            img.onerror = () => resolve(''); // Handle image loading errors
-            img.src = imageUrl;
-        });
-    };
-
     // --- SERVICES/PDFGENERATOR.TS ---
     const createPdf = async (elementId, outputType = 'save') => {
       const originalElement = document.getElementById(elementId);
@@ -284,9 +223,9 @@
     // --- COMPONENTS/CVPREVIEW.TSX ---
     const SectionTitle = ({ children }) => React.createElement('h2', { className: "text-[#E31D2A] text-lg tracking-[0.3em] font-semibold mb-6 uppercase" }, children);
 
-    const CvPreview = ({ cvData, id, className }) => {
-      // Use croppedProfilePictureUrl if available, otherwise fallback to original
-      const { name, profilePictureUrl, croppedProfilePictureUrl, dob, personalDetails, skills, languages, workExperience, education } = cvData;
+    const CvPreview = ({ cvData, id, className, onImagePositionChange }) => {
+      // Use profilePictureUrl and CSS positioning
+      const { name, profilePictureUrl, imagePosition, dob, personalDetails, skills, languages, workExperience, education } = cvData;
       const baseClasses = "bg-white text-black min-h-[297mm] shadow-2xl flex flex-col";
       
       const headerHeight = 140;
@@ -294,10 +233,57 @@
       // ZMIANA: Przesunięcie zdjęcia w dół (zwiększony offset z +20 na +50)
       const profileImageTop = headerHeight - (profileImageSize / 2) + 50; 
       
-      // ZMIANA: Osobne wyliczenie paddingu dla lewej kolumny, aby zdjęcie nie zasłaniało daty urodzenia
-      // Image Bottom relative to Main (starts at 140): 115 + 150 - 140 = 125px overlap. 
-      // Add 24px buffer -> ~149px
-      const leftColumnPaddingTop = (profileImageSize / 2) + 50 + 24; 
+      // ZMIANA: Osobne wyliczenie paddingu dla lewej kolumny
+      const leftColumnPaddingTop = (profileImageSize / 2) + 50 - 20; 
+
+      // --- DRAGGING LOGIC FOR IMAGE ---
+      const [isDragging, setIsDragging] = useState(false);
+      const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+      const [startImgPos, setStartImgPos] = useState({ x: 0, y: 0 });
+
+      const handleMouseDown = (e) => {
+        if (!onImagePositionChange) return;
+        e.preventDefault();
+        e.stopPropagation(); // Prevent propagation to avoid conflicting with other drag behaviors
+        setIsDragging(true);
+        setStartPos({ x: e.clientX, y: e.clientY });
+        setStartImgPos({ ...imagePosition });
+      };
+
+      const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const dx = e.clientX - startPos.x;
+        const dy = e.clientY - startPos.y;
+        
+        // Sensitivity for dragging on the preview (approx based on size)
+        const sensitivity = 0.2; 
+
+        let newX = startImgPos.x - (dx * sensitivity);
+        let newY = startImgPos.y - (dy * sensitivity);
+
+        newX = Math.max(0, Math.min(100, newX));
+        newY = Math.max(0, Math.min(100, newY));
+
+        onImagePositionChange({ x: newX, y: newY });
+      };
+
+      const handleMouseUp = () => setIsDragging(false);
+
+      useEffect(() => {
+        if (isDragging) {
+          window.addEventListener('mousemove', handleMouseMove);
+          window.addEventListener('mouseup', handleMouseUp);
+        } else {
+          window.removeEventListener('mousemove', handleMouseMove);
+          window.removeEventListener('mouseup', handleMouseUp);
+        }
+        return () => {
+          window.removeEventListener('mousemove', handleMouseMove);
+          window.removeEventListener('mouseup', handleMouseUp);
+        };
+      }, [isDragging, handleMouseMove]);
+
 
       return React.createElement('div', { id: id, className: `${baseClasses} ${className}`, style: { fontFamily: "'Poppins', sans-serif" } },
         // MODIFIED HEADER
@@ -313,38 +299,36 @@
           }),
 
           // Content Container
-          // Enforced desktop padding (px-10)
           React.createElement('div', { className: "relative z-10 flex items-center w-full h-full px-10" },
-            // We push the name to the right side.
-            // Profile picture is absolute left-10 (~40px) + width 180px.
-            // Text needs to be clear of that area.
-            // ZMIANA: Ograniczenie szerokości do 50% (w-1/2) i wyrównanie do prawej (ml-auto), aby uniknąć nachodzenia na zdjęcie
             React.createElement('div', { className: 'w-1/2 ml-auto flex justify-end items-center' },
               React.createElement('h1', { className: "text-4xl font-bold leading-tight tracking-wide break-words uppercase drop-shadow-md text-right" }, name || 'Imię i Nazwisko')
             )
           ),
           
-          // Profile Picture Container
+          // Profile Picture Container - NOW DRAGGABLE
           React.createElement('div', { 
-            className: "absolute left-10 rounded-full bg-white p-2 shadow-lg z-20", // Added z-20 to be on top of bg image
-            style: { top: `${profileImageTop}px`, width: `${profileImageSize}px`, height: `${profileImageSize}px` }
+            className: "absolute left-10 rounded-full bg-white p-2 shadow-lg z-20 cursor-move group", 
+            style: { top: `${profileImageTop}px`, width: `${profileImageSize}px`, height: `${profileImageSize}px` },
+            onMouseDown: handleMouseDown,
+            title: "Chwyć i przesuń zdjęcie"
           },
             React.createElement('img', { 
-                // Now uses croppedProfilePictureUrl directly
-                src: croppedProfilePictureUrl || `https://picsum.photos/seed/${name || 'placeholder'}/180`, 
+                src: profilePictureUrl || `https://picsum.photos/seed/${name || 'placeholder'}/180`, 
                 alt: name, 
-                className: "w-full h-full rounded-full object-cover",
-                style: { objectPosition: `50% 50%` } // object-position no longer needed here as image is pre-cropped
-            })
+                className: "w-full h-full rounded-full object-cover pointer-events-none", // pointer-events-none crucial for drag
+                style: { objectPosition: `${imagePosition.x}% ${imagePosition.y}%` }
+            }),
+             // Hover Hint
+             React.createElement('div', { className: "absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 pointer-events-none" },
+               React.createElement('span', { className: "text-white text-xs font-bold drop-shadow-md" }, "Przesuń")
+             )
           )
         ),
         // MODIFIED: Enforced desktop layout (flex-row) instead of flex-col on mobile
         React.createElement('main', { 
           className: "flex flex-row flex-grow",
-          // ZMIANA: Usunięto ogólny padding-top, aby prawa kolumna mogła iść wyżej
         },
           // MODIFIED: Enforced desktop widths and order
-          // ZMIANA: Dodano style paddingu tylko dla lewej kolumny
           React.createElement('div', { 
               className: "w-[38%] p-6 pl-10 pr-6 pb-8 order-1",
               style: { paddingTop: `${leftColumnPaddingTop}px` }
@@ -377,12 +361,11 @@
             )
           ),
           // MODIFIED: Enforced desktop widths and order
-          // ZMIANA: Prawa kolumna ma zwiększony padding (pt-20), aby wyrównać sekcje
           React.createElement('div', { className: "w-[62%] p-6 pr-10 pt-20 order-2 flex flex-col" },
             
-            // ZMIANA: Zmiana napisu na CURRICULUM VITAE i wyśrodkowanie, kolor ciemniejszy (text-gray-300)
-            React.createElement('div', { className: "flex justify-center mb-6" },
-                React.createElement('div', { className: "text-4xl font-bold text-gray-300 tracking-widest uppercase select-none font-poppins" }, "Curriculum vitae")
+            // ZMIANA: Zmiana napisu na CURRICULUM VITAE i wyśrodkowanie
+            React.createElement('div', { className: "w-full flex justify-center mb-6" },
+                React.createElement('div', { className: "text-4xl font-bold text-gray-300 tracking-widest uppercase select-none font-poppins text-center w-full" }, "Curriculum vitae")
             ),
 
             React.createElement('div', null,
@@ -406,7 +389,6 @@
                 )
             ),
             React.createElement('div', { className: 'flex-grow min-h-[24px]' }),
-            // FIX 4: Klasa cv-logo-wrapper dla łatwego identyfikowania
             React.createElement('div', { className: 'pt-6 flex justify-end cv-logo-wrapper' },
               React.createElement('img', {
                   src: "logo-covebo-icon.png",
@@ -425,7 +407,6 @@
       React.createElement('input', { type: "text", value: value, onChange: onChange, placeholder: placeholder, className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500" })
     );
 
-    // MODIFIED SECTION COMPONENT: ACCORDION STYLE
     const Section = ({ title, children, description, defaultOpen = false }) => {
       const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -437,7 +418,6 @@
         },
           React.createElement('div', null,
             React.createElement('h3', { className: "text-lg font-bold text-gray-800" }, title),
-            // Show description only if closed and description is provided
             !isOpen && description && React.createElement('p', { className: "text-xs text-gray-500 mt-1 font-normal" }, description)
           ),
           React.createElement(ChevronIcon, { className: `w-5 h-5 text-gray-500 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}` })
@@ -445,79 +425,6 @@
         isOpen && React.createElement('div', { className: "p-4 border-t border-gray-200 bg-gray-50/30" }, 
           children
         )
-      );
-    };
-
-    // --- NEW COMPONENT: ImageCropper ---
-    const ImageCropper = ({ imageUrl, position, onPositionChange }) => {
-      const [isDragging, setIsDragging] = useState(false);
-      const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-      const [startImgPos, setStartImgPos] = useState({ x: 0, y: 0 });
-      const containerRef = useRef(null);
-
-      const handleMouseDown = (e) => {
-        e.preventDefault();
-        setIsDragging(true);
-        setStartPos({ x: e.clientX, y: e.clientY });
-        setStartImgPos({ ...position });
-      };
-
-      const handleMouseMove = (e) => {
-        if (!isDragging || !containerRef.current) return;
-        const dx = e.clientX - startPos.x;
-        const dy = e.clientY - startPos.y;
-        
-        // Adjust sensitivity based on the container size to make dragging intuitive
-        const containerWidth = containerRef.current.offsetWidth;
-        const containerHeight = containerRef.current.offsetHeight;
-        
-        // Calculate the maximum possible offset for the image to still cover the circle
-        // This is a rough estimate and might need fine-tuning based on image aspect ratio
-        // For simplicity, we assume image fills at least 100% of the circle dimension.
-        // A smaller sensitivity means you drag less to move the image more.
-        const sensitivityX = 100 / (containerWidth * 2); // Divide by 2 to make it less sensitive
-        const sensitivityY = 100 / (containerHeight * 2);
-
-        let newX = startImgPos.x - (dx * sensitivityX);
-        let newY = startImgPos.y - (dy * sensitivityY);
-
-        newX = Math.max(0, Math.min(100, newX));
-        newY = Math.max(0, Math.min(100, newY));
-
-        onPositionChange({ x: newX, y: newY });
-      };
-
-      const handleMouseUp = () => setIsDragging(false);
-
-      useEffect(() => {
-        if (isDragging) {
-          window.addEventListener('mousemove', handleMouseMove);
-          window.addEventListener('mouseup', handleMouseUp);
-        } else {
-          window.removeEventListener('mousemove', handleMouseMove);
-          window.removeEventListener('mouseup', handleMouseUp);
-        }
-        return () => {
-          window.removeEventListener('mousemove', handleMouseMove);
-          window.removeEventListener('mouseup', handleMouseUp);
-        };
-      }, [isDragging, handleMouseMove]);
-
-      return React.createElement('div', { className: "mt-4" },
-        React.createElement('p', { className: "text-xs font-bold text-gray-700 mb-2" }, "Przesuń zdjęcie myszką, aby wykadrować:"),
-        React.createElement('div', { 
-            ref: containerRef,
-            className: "w-32 h-32 rounded-full overflow-hidden border-2 border-red-500 cursor-grab active:cursor-grabbing relative mx-auto bg-gray-200 shadow-sm",
-            onMouseDown: handleMouseDown,
-            title: "Chwyć i przesuń"
-        },
-            React.createElement('img', {
-                src: imageUrl,
-                className: "w-full h-full object-cover pointer-events-none",
-                style: { objectPosition: `${position.x}% ${position.y}%` }
-            })
-        ),
-        React.createElement('p', { className: "text-[10px] text-gray-400 text-center mt-2" }, "Podgląd kadrowania")
       );
     };
 
@@ -651,15 +558,10 @@
           React.createElement('div', { className: "mb-3" },
             React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Zdjęcie Profilowe"),
             React.createElement('input', { type: "file", onChange: handleImageUpload, accept: "image/*", className: "w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" })
-          ),
-          cvData.profilePictureUrl && React.createElement(ImageCropper, {
-            imageUrl: cvData.profilePictureUrl,
-            position: cvData.imagePosition,
-            onPositionChange: (newPos) => handleFieldChange('imagePosition', newPos)
-          })
+          )
+          // Removed ImageCropper here
         ),
         
-        // CHANGED: Accordion for Work Experience with default closed and description
         React.createElement(Section, { title: "Doświadczenie Zawodowe", description: "Dodaj doświadczenie / edytuj doświadczenie", defaultOpen: false },
           renderWorkExperience(),
           React.createElement('button', { type: "button", onClick: () => addItem('workExperience'), className: "mt-4 w-full py-2 px-4 border border-red-500 text-red-600 rounded-md hover:bg-red-50 font-medium transition duration-150" }, " + Dodaj nowe doświadczenie")
@@ -689,7 +591,6 @@
       name: 'Jan Kowalski',
       dob: '01.01.1990',
       profilePictureUrl: 'https://placehold.co/180x180/E31D2A/ffffff?text=ZDJĘCIE',
-      croppedProfilePictureUrl: 'https://placehold.co/180x180/E31D2A/ffffff?text=ZDJĘCIE',
       imagePosition: { x: 50, y: 50 },
       personalDetails: [
         { id: generateUniqueId(), text: 'Prawo jazdy kat. B' },
@@ -775,15 +676,9 @@
         setPinchDistance(null);
       };
 
-      // Efekt do generowania wykadrowanego obrazu po zmianie URL lub pozycji
-      useEffect(() => {
-        const updateCroppedImage = async () => {
-            const croppedUrl = await getRoundedCanvasCroppedImage(cvData.profilePictureUrl, cvData.imagePosition);
-            setCvData(prev => ({ ...prev, croppedProfilePictureUrl: croppedUrl || prev.profilePictureUrl }));
-        };
-        updateCroppedImage();
-      }, [cvData.profilePictureUrl, cvData.imagePosition]);
-
+      const handleImagePositionChange = (newPos) => {
+          setCvData(prev => ({ ...prev, imagePosition: newPos }));
+      };
 
       return React.createElement('div', { className: `min-h-screen flex flex-col md:flex-row ${view === 'form' ? 'mobile-view-form' : 'mobile-view-preview'}` },
         // Mobile View Toggles
@@ -801,7 +696,7 @@
         // CV Form (lewa strona)
         React.createElement(CvForm, { cvData: cvData, setCvData: setCvData }),
 
-        // CV Preview (prawa strona) - MODIFIED to include Toolbar, horizontal scrolling, and PINCH ZOOM
+        // CV Preview (prawa strona)
         React.createElement('div', { 
             id: "cv-preview-container", 
             className: "bg-gray-100 flex-grow w-full md:w-1/2 lg:w-3/5 overflow-y-auto overflow-x-auto flex flex-col touch-pan-x touch-pan-y",
@@ -838,7 +733,12 @@
                     MozTransformOrigin: "top center"
                 }
             },
-                 React.createElement(CvPreview, { cvData: cvData, id: "cv-document", className: "w-[210mm] h-auto min-h-fit" })
+                 React.createElement(CvPreview, { 
+                     cvData: cvData, 
+                     id: "cv-document", 
+                     className: "w-[210mm] h-auto min-h-fit",
+                     onImagePositionChange: handleImagePositionChange
+                 })
             )
         )
       );

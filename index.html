@@ -270,9 +270,9 @@
       const baseClasses = "bg-white text-black min-h-[297mm] shadow-2xl flex flex-col";
       
       const headerHeight = 140;
-      const profileImageSize = 180;
-      const profileImageTop = headerHeight - (profileImageSize / 2);
-      const mainPaddingTop = (profileImageSize / 2) + 24;
+      const profileImageSize = 150; // MODIFIED: Reduced size (was 180)
+      const profileImageTop = headerHeight - (profileImageSize / 2) + 20; // MODIFIED: Moved down by 20px
+      const mainPaddingTop = (profileImageSize / 2) + 20 + 24; // MODIFIED: Adjusted padding to match moved image
 
       return React.createElement('div', { id: id, className: `${baseClasses} ${className}`, style: { fontFamily: "'Poppins', sans-serif" } },
         // MODIFIED HEADER

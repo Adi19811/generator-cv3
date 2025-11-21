@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -290,11 +291,14 @@
       const baseClasses = "bg-white text-black min-h-[297mm] shadow-2xl flex flex-col";
       
       const headerHeight = 140;
-      const profileImageSize = 150; // MODIFIED: Reduced size (was 180)
+      const profileImageSize = 150; 
       // ZMIANA: Przesunięcie zdjęcia w dół (zwiększony offset z +20 na +50)
       const profileImageTop = headerHeight - (profileImageSize / 2) + 50; 
-      // ZMIANA: Dopasowanie paddingu do nowej pozycji zdjęcia
-      const mainPaddingTop = (profileImageSize / 2) + 50 + 24; 
+      
+      // ZMIANA: Osobne wyliczenie paddingu dla lewej kolumny, aby zdjęcie nie zasłaniało daty urodzenia
+      // Image Bottom relative to Main (starts at 140): 115 + 150 - 140 = 125px overlap. 
+      // Add 24px buffer -> ~149px
+      const leftColumnPaddingTop = (profileImageSize / 2) + 50 + 24; 
 
       return React.createElement('div', { id: id, className: `${baseClasses} ${className}`, style: { fontFamily: "'Poppins', sans-serif" } },
         // MODIFIED HEADER
@@ -315,7 +319,8 @@
             // We push the name to the right side.
             // Profile picture is absolute left-10 (~40px) + width 180px.
             // Text needs to be clear of that area.
-            React.createElement('div', { className: 'w-full flex justify-end items-center' },
+            // ZMIANA: Ograniczenie szerokości do 50% (w-1/2) i wyrównanie do prawej (ml-auto), aby uniknąć nachodzenia na zdjęcie
+            React.createElement('div', { className: 'w-1/2 ml-auto flex justify-end items-center' },
               React.createElement('h1', { className: "text-4xl font-bold leading-tight tracking-wide break-words uppercase drop-shadow-md text-right" }, name || 'Imię i Nazwisko')
             )
           ),
@@ -337,10 +342,14 @@
         // MODIFIED: Enforced desktop layout (flex-row) instead of flex-col on mobile
         React.createElement('main', { 
           className: "flex flex-row flex-grow",
-          style: { paddingTop: `${mainPaddingTop}px` }
+          // ZMIANA: Usunięto ogólny padding-top, aby prawa kolumna mogła iść wyżej
         },
           // MODIFIED: Enforced desktop widths and order
-          React.createElement('div', { className: "w-[38%] p-6 pl-10 pr-6 pb-8 order-1" },
+          // ZMIANA: Dodano style paddingu tylko dla lewej kolumny
+          React.createElement('div', { 
+              className: "w-[38%] p-6 pl-10 pr-6 pb-8 order-1",
+              style: { paddingTop: `${leftColumnPaddingTop}px` }
+            },
             React.createElement('div', { className: "bg-gray-100 p-6 h-full" },
                 React.createElement('div', null,
                   dob && React.createElement('div', { className: "mb-6" },
@@ -369,7 +378,14 @@
             )
           ),
           // MODIFIED: Enforced desktop widths and order
-          React.createElement('div', { className: "w-[62%] p-6 pr-10 order-2 flex flex-col" },
+          // ZMIANA: Prawa kolumna ma standardowy padding (pt-10), dzięki czemu jest wyżej
+          React.createElement('div', { className: "w-[62%] p-6 pr-10 pt-10 order-2 flex flex-col" },
+            
+            // ZMIANA: Dodano ładny napis CV
+            React.createElement('div', { className: "flex justify-end mb-6" },
+                React.createElement('div', { className: "text-7xl font-bold text-gray-100 tracking-widest select-none font-poppins" }, "CV")
+            ),
+
             React.createElement('div', null,
                 workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
                 React.createElement(SectionTitle, null, "Doświadczenie"),

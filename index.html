@@ -275,27 +275,32 @@
       const mainPaddingTop = (profileImageSize / 2) + 24;
 
       return React.createElement('div', { id: id, className: `${baseClasses} ${className}`, style: { fontFamily: "'Poppins', sans-serif" } },
+        // MODIFIED HEADER
         React.createElement('header', { 
-          className: "bg-[#E31D2A] text-white relative",
+          className: "relative text-white", // Removed bg color
           style: { height: `${headerHeight}px` }
         },
-          // MODIFIED: Enforced desktop padding (px-10) instead of mobile responsiveness
-          React.createElement('div', { className: "flex items-center w-full h-full px-10" },
-            React.createElement('div', { className: "w-12 shrink-0" }),
-            React.createElement('div', { className: 'text-center pr-12 pl-[180px] flex-grow' },
-              React.createElement('h1', { className: "text-4xl font-bold leading-tight tracking-wide break-words max-w-xl mx-auto" }, name || 'Imię i Nazwisko')
-            ),
-            React.createElement('div', { className: "flex flex-col gap-3 w-12 shrink-0" },
-              React.createElement('div', { className: "w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50" },
-                React.createElement(ConveyorIcon, { className: "w-6 h-6" })
-              ),
-              React.createElement('div', { className: "w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50" },
-                React.createElement(ScannerIcon, { className: "w-6 h-6" })
-              )
+          // Background Image
+          React.createElement('img', {
+              src: "Covebostopka.png",
+              alt: "Nagłówek",
+              className: "absolute inset-0 w-full h-full object-cover z-0"
+          }),
+
+          // Content Container
+          // Enforced desktop padding (px-10)
+          React.createElement('div', { className: "relative z-10 flex items-center w-full h-full px-10" },
+            // We push the name to the right side.
+            // Profile picture is absolute left-10 (~40px) + width 180px.
+            // Text needs to be clear of that area.
+            React.createElement('div', { className: 'w-full flex justify-end items-center' },
+              React.createElement('h1', { className: "text-4xl font-bold leading-tight tracking-wide break-words uppercase drop-shadow-md text-right" }, name || 'Imię i Nazwisko')
             )
           ),
+          
+          // Profile Picture Container
           React.createElement('div', { 
-            className: "absolute left-10 rounded-full bg-white p-2 shadow-lg",
+            className: "absolute left-10 rounded-full bg-white p-2 shadow-lg z-20", // Added z-20 to be on top of bg image
             style: { top: `${profileImageTop}px`, width: `${profileImageSize}px`, height: `${profileImageSize}px` }
           },
             React.createElement('img', { 

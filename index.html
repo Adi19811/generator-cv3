@@ -800,10 +800,30 @@
 
       const handleShare = async (platform) => {
         try {
-            // 1. Generate and download PDF first
-            await generatePdf('cv-document');
+            // 1. Generate PDF Blob
+            const file = await createPdf('cv-document', 'blob');
+
+            // 2. Try Web Share API (Mobile/Supported Browsers) - allows sending actual file
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                 await navigator.share({
+                     files: [file],
+                     title: 'CV - ' + cvData.name,
+                     text: lang === 'pl' ? 'Cześć! Przesyłam moje CV.' : 'Hi! Here is my CV.'
+                 });
+                 return; 
+            }
+
+            // 3. Fallback: Manual Download + Open App (Browsers blocking file share)
+            // Save the file locally
+            const url = URL.createObjectURL(file);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cv.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
             
-            // 2. Wait briefly for download to start/visual cue, then open app with message
             setTimeout(() => {
                 const message = lang === 'pl' 
                     ? "Cześć! Przesyłam moje CV. (Załącz pobrany plik PDF)" 
@@ -816,14 +836,15 @@
                     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank');
                 }
                 
-                // 3. Alert user to attach the file manually
                 alert(lang === 'pl' 
-                    ? "PDF został pobrany na Twoje urządzenie. Pamiętaj, aby dodać go ręcznie jako załącznik do wiadomości!" 
-                    : "PDF has been downloaded to your device. Please remember to manually attach it to your message!");
-            }, 1000);
+                    ? "Twoja przeglądarka nie wspiera bezpośredniego udostępniania plików. PDF został pobrany - dodaj go ręcznie do wiadomości." 
+                    : "Your browser does not support direct file sharing. PDF downloaded - please attach it manually.");
+            }, 500);
         } catch (e) {
-            console.error("Error generating PDF for share", e);
-            alert(lang === 'pl' ? "Błąd podczas generowania PDF." : "Error generating PDF.");
+            if (e.name !== 'AbortError') {
+                console.error("Error sharing PDF", e);
+                alert(lang === 'pl' ? "Błąd generowania PDF." : "Error generating PDF.");
+            }
         }
       };
 

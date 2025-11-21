@@ -798,6 +798,35 @@
           setCvData(prev => ({ ...prev, imagePosition: newPos }));
       };
 
+      const handleShare = async (platform) => {
+        try {
+            // 1. Generate and download PDF first
+            await generatePdf('cv-document');
+            
+            // 2. Wait briefly for download to start/visual cue, then open app with message
+            setTimeout(() => {
+                const message = lang === 'pl' 
+                    ? "Cześć! Przesyłam moje CV. (Załącz pobrany plik PDF)" 
+                    : "Hi! I am sending my CV. (Please attach the downloaded PDF)";
+                
+                if (platform === 'whatsapp') {
+                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+                } else if (platform === 'email') {
+                    const subject = `CV - ${cvData.name}`;
+                    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank');
+                }
+                
+                // 3. Alert user to attach the file manually
+                alert(lang === 'pl' 
+                    ? "PDF został pobrany na Twoje urządzenie. Pamiętaj, aby dodać go ręcznie jako załącznik do wiadomości!" 
+                    : "PDF has been downloaded to your device. Please remember to manually attach it to your message!");
+            }, 1000);
+        } catch (e) {
+            console.error("Error generating PDF for share", e);
+            alert(lang === 'pl' ? "Błąd podczas generowania PDF." : "Error generating PDF.");
+        }
+      };
+
       return React.createElement('div', { className: `min-h-screen flex flex-col md:flex-row ${view === 'form' ? 'mobile-view-form' : 'mobile-view-preview'}` },
         // Mobile View Toggles
         React.createElement('div', { className: "md:hidden bg-white p-4 border-b flex justify-around sticky top-0 z-10 shadow-sm" },
@@ -826,12 +855,12 @@
             // Toolbar
             React.createElement('div', { className: "sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b p-3 flex justify-end gap-2 shadow-sm" },
                 React.createElement('button', { 
-                    onClick: () => window.open('https://wa.me/?text=' + encodeURIComponent('Cześć! Przesyłam moje CV.'), '_blank'),
+                    onClick: () => handleShare('whatsapp'),
                     className: "flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white px-3 py-2 rounded text-xs md:text-sm font-medium transition shadow-sm" 
                 }, React.createElement(MessageIcon, { className: "w-4 h-4" }), "WhatsApp"),
                 
                 React.createElement('button', { 
-                    onClick: () => window.open('mailto:?subject=CV&body=' + encodeURIComponent('Cześć! Przesyłam moje CV.'), '_blank'),
+                    onClick: () => handleShare('email'),
                     className: "flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-xs md:text-sm font-medium transition shadow-sm" 
                 }, React.createElement(MailIcon, { className: "w-4 h-4" }), "Email"),
 

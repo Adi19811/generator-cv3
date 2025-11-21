@@ -167,6 +167,43 @@
       clone.style.zoom = '1'; 
       clone.style.transform = 'none';
       
+      // --- LOGO EXTRACTION ---
+      // Znajdujemy logo w klonie, pobieramy jego dane, a następnie ukrywamy element w DOM klona,
+      // aby nie przeszkadzał w przepływie treści i nie był cięty.
+      // Zamiast tego dodamy go ręcznie na każdą stronę PDF.
+      let logoDataUrl = null;
+      let logoAspectRatio = 3; // Domyślna proporcja
+      const logoWrapper = clone.querySelector('.cv-logo-wrapper');
+      
+      if (logoWrapper) {
+          const img = logoWrapper.querySelector('img');
+          if (img) {
+             try {
+                 const imgLoad = new Image();
+                 imgLoad.crossOrigin = "Anonymous";
+                 imgLoad.src = img.src;
+                 await new Promise((resolve) => {
+                     if (imgLoad.complete) resolve();
+                     imgLoad.onload = resolve;
+                     imgLoad.onerror = resolve; 
+                 });
+                 
+                 if (imgLoad.width > 0) {
+                    const c = document.createElement('canvas');
+                    c.width = imgLoad.width;
+                    c.height = imgLoad.height;
+                    c.getContext('2d').drawImage(imgLoad, 0, 0);
+                    logoDataUrl = c.toDataURL('image/png');
+                    logoAspectRatio = imgLoad.width / imgLoad.height;
+                 }
+             } catch (e) {
+                 console.warn("Logo extraction failed", e);
+             }
+          }
+          // Ukrywamy logo w przepływie dokumentu
+          logoWrapper.style.display = 'none';
+      }
+
       document.body.appendChild(clone);
 
       try {
@@ -174,7 +211,7 @@
         
         // FIX 2: Dodano nagłówki (h2, h3) do listy elementów niełamliwych
         // Zapewnia to, że logo (.cv-logo-wrapper) ani nagłówki sekcji nie zostaną przecięte.
-        const unbreakableElements = Array.from(clone.querySelectorAll('.mb-6, .list-disc > li, .cv-logo-wrapper, h2, h3'));
+        const unbreakableElements = Array.from(clone.querySelectorAll('.mb-6, .list-disc > li, h2, h3'));
         
         const elementPositions = unbreakableElements.map(el => ({
             top: el.offsetTop * scale,
@@ -267,6 +304,19 @@
           
           pdf.addImage(pageImgData, 'PNG', 0, currentTopMargin, a4Width, pageImgHeightMm);
           
+          // --- RĘCZNE DODAWANIE LOGO NA KAŻDĄ STRONĘ ---
+          if (logoDataUrl) {
+              const logoWidth = 24; // mm (w-24 to ok 24-25mm)
+              const logoHeight = logoWidth / logoAspectRatio;
+              const footerMarginRight = 10;
+              const footerMarginBottom = 10;
+              
+              const logoX = a4Width - logoWidth - footerMarginRight;
+              const logoY = a4Height - logoHeight - footerMarginBottom;
+              
+              pdf.addImage(logoDataUrl, 'PNG', logoX, logoY, logoWidth, logoHeight);
+          }
+
           startY_px = actualCutPx;
         }
 

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -378,12 +377,12 @@
             )
           ),
           // MODIFIED: Enforced desktop widths and order
-          // ZMIANA: Prawa kolumna ma standardowy padding (pt-10), dzięki czemu jest wyżej
-          React.createElement('div', { className: "w-[62%] p-6 pr-10 pt-10 order-2 flex flex-col" },
+          // ZMIANA: Prawa kolumna ma zwiększony padding (pt-20), aby wyrównać sekcje
+          React.createElement('div', { className: "w-[62%] p-6 pr-10 pt-20 order-2 flex flex-col" },
             
-            // ZMIANA: Zmiana napisu na CURRICULUM VITAE i wyśrodkowanie
+            // ZMIANA: Zmiana napisu na CURRICULUM VITAE i wyśrodkowanie, kolor ciemniejszy (text-gray-300)
             React.createElement('div', { className: "flex justify-center mb-6" },
-                React.createElement('div', { className: "text-4xl font-bold text-gray-100 tracking-widest uppercase select-none font-poppins" }, "Curriculum vitae")
+                React.createElement('div', { className: "text-4xl font-bold text-gray-300 tracking-widest uppercase select-none font-poppins" }, "Curriculum vitae")
             ),
 
             React.createElement('div', null,

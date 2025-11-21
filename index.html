@@ -172,8 +172,9 @@
       try {
         const scale = 3;
         
-        // FIX 2: Dodano .cv-logo-wrapper do listy elementów, których nie wolno przecinać
-        const unbreakableElements = Array.from(clone.querySelectorAll('.mb-6, .list-disc > li, .cv-logo-wrapper'));
+        // FIX 2: Dodano nagłówki (h2, h3) do listy elementów niełamliwych
+        // Zapewnia to, że logo (.cv-logo-wrapper) ani nagłówki sekcji nie zostaną przecięte.
+        const unbreakableElements = Array.from(clone.querySelectorAll('.mb-6, .list-disc > li, .cv-logo-wrapper, h2, h3'));
         
         const elementPositions = unbreakableElements.map(el => ({
             top: el.offsetTop * scale,
@@ -217,17 +218,19 @@
           let actualCutPx = proposedCutPx;
 
           if (proposedCutPx < sourceHeightPx) {
-            let lastElementBeforeCut = null;
-            for (const el of elementPositions) {
-                if (el.top < proposedCutPx) {
-                    lastElementBeforeCut = el;
-                } else {
-                    break;
+            // Szukamy elementu, który jest PRZECINANY przez linię cięcia
+            const splitElement = elementPositions.find(el => 
+                el.top < proposedCutPx && el.bottom > proposedCutPx
+            );
+
+            if (splitElement) {
+                // Jeśli element zaczyna się na tej stronie (tzn. nie jest wyższy niż cała strona),
+                // przesuwamy cięcie przed ten element.
+                if (splitElement.top > startY_px) {
+                    actualCutPx = splitElement.top - 10; // Dajemy mały bufor 10px
                 }
-            }
-            
-            if (lastElementBeforeCut && lastElementBeforeCut.bottom > proposedCutPx && lastElementBeforeCut.top > startY_px) {
-              actualCutPx = lastElementBeforeCut.top;
+                // Jeśli element jest wyższy niż strona, niestety musimy go przeciąć, 
+                // więc actualCutPx zostaje bez zmian (chyba że chcemy go przenieść w całości na następną, ale to zostawi pustą stronę).
             }
           } else {
             actualCutPx = sourceHeightPx;
@@ -430,12 +433,13 @@
         React.createElement('main', { 
           className: "flex flex-row flex-grow",
         },
-          // MODIFIED: Enforced desktop widths and order
+          // MODIFIED: Enforced desktop widths and order. Added flex flex-col to stretch background
           React.createElement('div', { 
-              className: "w-[38%] p-6 pl-10 pr-6 pb-8 order-1",
+              className: "w-[38%] pl-10 pr-6 pb-0 order-1 flex flex-col", // Removed pb-8, added flex-col
               style: { paddingTop: `${leftColumnPaddingTop}px` }
             },
-            React.createElement('div', { className: "bg-gray-100 p-6 h-full" },
+            // Added flex-grow to the grey div so it fills the remaining height
+            React.createElement('div', { className: "bg-gray-100 p-6 flex-grow" },
                 React.createElement('div', null,
                   dob && React.createElement('div', { className: "mb-6" },
                     React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, t.previewDob),
@@ -462,7 +466,7 @@
                 )
             )
           ),
-          // MODIFIED: Enforced desktop widths and order
+          // MODIFIED: Enforced desktop widths and order. Added flex flex-col for vertical spacing
           React.createElement('div', { className: "w-[62%] p-6 pr-10 pt-20 order-2 flex flex-col" },
             
             React.createElement('div', { className: "w-full flex justify-center mb-6" },
@@ -489,8 +493,10 @@
                 ))
                 )
             ),
+            // Spacer to push logo to bottom
             React.createElement('div', { className: 'flex-grow min-h-[24px]' }),
-            React.createElement('div', { className: 'pt-6 flex justify-end cv-logo-wrapper' },
+            // Added pb-8 for neat positioning at bottom
+            React.createElement('div', { className: 'pt-6 pb-8 flex justify-end cv-logo-wrapper' },
               React.createElement('img', {
                   src: "logo-covebo-icon.png",
                   alt: "Covebo Logo",

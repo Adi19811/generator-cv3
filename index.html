@@ -307,7 +307,7 @@
           
           // Profile Picture Container - NOW DRAGGABLE
           React.createElement('div', { 
-            className: "absolute left-10 rounded-full bg-white p-2 shadow-lg z-20 cursor-move group", 
+            className: "absolute left-10 rounded-full bg-white p-2 shadow-lg z-20 cursor-move group overflow-hidden", 
             style: { top: `${profileImageTop}px`, width: `${profileImageSize}px`, height: `${profileImageSize}px` },
             onMouseDown: handleMouseDown,
             title: "Chwyć i przesuń zdjęcie"
@@ -315,8 +315,13 @@
             React.createElement('img', { 
                 src: profilePictureUrl || `https://picsum.photos/seed/${name || 'placeholder'}/180`, 
                 alt: name, 
-                className: "w-full h-full rounded-full object-cover pointer-events-none", // pointer-events-none crucial for drag
-                style: { objectPosition: `${imagePosition.x}% ${imagePosition.y}%` }
+                className: "w-full h-full rounded-full object-cover pointer-events-none block", 
+                style: { 
+                    objectPosition: `${imagePosition.x}% ${imagePosition.y}%`,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                }
             }),
              // Hover Hint
              React.createElement('div', { className: "absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 pointer-events-none" },

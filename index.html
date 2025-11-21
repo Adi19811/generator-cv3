@@ -31,7 +31,9 @@
 {
   "imports": {
     "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
   }
 }
 </script>
@@ -246,6 +248,16 @@
         React.createElement('path', { d: "M21.25 10.75a4.5 4.5 0 0 0 0 3" })
     );
 
+    const ChevronIcon = ({ className }) => React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className }, React.createElement('polyline', { points: "6 9 12 15 18 9" }));
+
+    // --- NEW ICONS FOR TOOLBAR ---
+    const DownloadIcon = (props) => React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", ...props }, React.createElement('path', { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }), React.createElement('polyline', { points: "7 10 12 15 17 10" }), React.createElement('line', { x1: "12", y1: "15", x2: "12", y2: "3" }));
+    
+    const MailIcon = (props) => React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", ...props }, React.createElement('rect', { width: "20", height: "16", x: "2", y: "4", rx: "2" }), React.createElement('path', { d: "m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" }));
+    
+    const MessageIcon = (props) => React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", ...props }, React.createElement('path', { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }));
+
+
     // --- COMPONENTS/CVPREVIEW.TSX ---
     const SectionTitle = ({ children }) => React.createElement('h2', { className: "text-[#E31D2A] text-lg tracking-[0.3em] font-semibold mb-6 uppercase" }, children);
 
@@ -366,10 +378,28 @@
       React.createElement('input', { type: "text", value: value, onChange: onChange, placeholder: placeholder, className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500" })
     );
 
-    const Section = ({ title, children }) => React.createElement('div', { className: "mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50/50" },
-      React.createElement('h3', { className: "text-lg font-bold text-gray-800 mb-4 border-b pb-2" }, title),
-      children
-    );
+    // MODIFIED SECTION COMPONENT: ACCORDION STYLE
+    const Section = ({ title, children, description, defaultOpen = false }) => {
+      const [isOpen, setIsOpen] = useState(defaultOpen);
+
+      return React.createElement('div', { className: "mb-4 border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm" },
+        React.createElement('button', { 
+          type: "button",
+          onClick: () => setIsOpen(!isOpen),
+          className: "w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+        },
+          React.createElement('div', null,
+            React.createElement('h3', { className: "text-lg font-bold text-gray-800" }, title),
+            // Show description only if closed and description is provided
+            !isOpen && description && React.createElement('p', { className: "text-xs text-gray-500 mt-1 font-normal" }, description)
+          ),
+          React.createElement(ChevronIcon, { className: `w-5 h-5 text-gray-500 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}` })
+        ),
+        isOpen && React.createElement('div', { className: "p-4 border-t border-gray-200 bg-gray-50/30" }, 
+          children
+        )
+      );
+    };
 
     // --- NEW COMPONENT: ImageCropper ---
     const ImageCropper = ({ imageUrl, position, onPositionChange }) => {
@@ -529,7 +559,7 @@
         }));
       };
 
-      const renderWorkExperience = () => cvData.workExperience.map((work) => React.createElement(Section, { key: work.id, title: work.jobTitle || "Nowe doświadczenie zawodowe" },
+      const renderWorkExperience = () => cvData.workExperience.map((work) => React.createElement(Section, { key: work.id, title: work.jobTitle || "Nowe doświadczenie zawodowe", defaultOpen: true },
         React.createElement(Input, { label: "Stanowisko", value: work.jobTitle, onChange: (e) => handleDynamicChange('workExperience', work.id, 'jobTitle', e.target.value) }),
         React.createElement(Input, { label: "Firma", value: work.company, onChange: (e) => handleDynamicChange('workExperience', work.id, 'company', e.target.value) }),
         React.createElement(Input, { label: "Okres (np. 01.2020 - 12.2023)", value: work.dateRange, onChange: (e) => handleDynamicChange('workExperience', work.id, 'dateRange', e.target.value) }),
@@ -544,7 +574,7 @@
         React.createElement('button', { type: "button", onClick: () => removeItem('workExperience', work.id), className: "mt-4 text-xs text-red-600 hover:text-red-800" }, "Usuń to doświadczenie")
       ));
 
-      const renderEducation = () => cvData.education.map((edu) => React.createElement(Section, { key: edu.id, title: edu.degree || "Nowa szkoła/kurs" },
+      const renderEducation = () => cvData.education.map((edu) => React.createElement(Section, { key: edu.id, title: edu.degree || "Nowa szkoła/kurs", defaultOpen: true },
         React.createElement(Input, { label: "Stopień/Kwalifikacja", value: edu.degree, onChange: (e) => handleDynamicChange('education', edu.id, 'degree', e.target.value) }),
         React.createElement(Input, { label: "Nazwa instytucji", value: edu.schoolName, onChange: (e) => handleDynamicChange('education', edu.id, 'schoolName', e.target.value) }),
         React.createElement(Input, { label: "Okres (np. 09.2015 - 06.2019)", value: edu.dateRange, onChange: (e) => handleDynamicChange('education', edu.id, 'dateRange', e.target.value) }),
@@ -555,7 +585,7 @@
         React.createElement('button', { type: "button", onClick: () => removeItem('education', edu.id), className: "mt-4 text-xs text-red-600 hover:text-red-800" }, "Usuń tę edukację")
       ));
 
-      const renderSimpleList = (section, title, placeholder) => React.createElement(Section, { title: title },
+      const renderSimpleList = (section, title, placeholder) => React.createElement(Section, { title: title, defaultOpen: false, description: "Rozwiń, aby edytować listę" },
         cvData[section].map((item) => React.createElement('div', { key: item.id, className: "flex items-center space-x-2 mb-2" },
           React.createElement('input', { type: "text", value: item.text, onChange: (e) => handleDynamicChange(section, item.id, 'text', e.target.value), placeholder: placeholder, className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
           React.createElement('button', { type: "button", onClick: () => removeItem(section, item.id), className: "text-red-500 hover:text-red-700 text-lg p-1" }, "\u00D7")
@@ -565,7 +595,7 @@
 
       return React.createElement('div', { id: "cv-form-container", className: "p-6 bg-white shadow-xl h-full overflow-y-auto w-full md:w-1/2 lg:w-2/5" },
         React.createElement('h2', { className: "text-2xl font-bold text-red-700 mb-6" }, "Edytor CV"),
-        React.createElement(Section, { title: "Dane Podstawowe" },
+        React.createElement(Section, { title: "Dane Podstawowe", defaultOpen: true },
           React.createElement(Input, { label: "Imię i Nazwisko", value: cvData.name, onChange: (e) => handleFieldChange('name', e.target.value), placeholder: "Jan Kowalski" }),
           React.createElement(Input, { label: "Data urodzenia", value: cvData.dob, onChange: (e) => handleFieldChange('dob', e.target.value), placeholder: "01.01.1990" }),
           React.createElement('div', { className: "mb-3" },
@@ -578,16 +608,18 @@
             onPositionChange: (newPos) => handleFieldChange('imagePosition', newPos)
           })
         ),
-        renderSimpleList('personalDetails', 'Uprawnienia (np. Prawo Jazdy, SEP)', 'Wózek widłowy...'),
-        renderSimpleList('languages', 'Znajomość Języków Obcych', 'Angielski B1'),
-        renderSimpleList('skills', 'Dodatkowe Umiejętności', 'Obsługa maszyn CNC'),
         
-        React.createElement(Section, { title: "Doświadczenie Zawodowe" },
+        // CHANGED: Accordion for Work Experience with default closed and description
+        React.createElement(Section, { title: "Doświadczenie Zawodowe", description: "Dodaj doświadczenie / edytuj doświadczenie", defaultOpen: false },
           renderWorkExperience(),
           React.createElement('button', { type: "button", onClick: () => addItem('workExperience'), className: "mt-4 w-full py-2 px-4 border border-red-500 text-red-600 rounded-md hover:bg-red-50 font-medium transition duration-150" }, " + Dodaj nowe doświadczenie")
         ),
+        
+        renderSimpleList('personalDetails', 'Uprawnienia (np. Prawo Jazdy, SEP)', 'Wózek widłowy...'),
+        renderSimpleList('languages', 'Znajomość Języków Obcych', 'Angielski B1'),
+        renderSimpleList('skills', 'Dodatkowe Umiejętności', 'Obsługa maszyn CNC'),
 
-        React.createElement(Section, { title: "Edukacja" },
+        React.createElement(Section, { title: "Edukacja", description: "Dodaj szkołę / edytuj edukację", defaultOpen: false },
           renderEducation(),
           React.createElement('button', { type: "button", onClick: () => addItem('education'), className: "mt-4 w-full py-2 px-4 border border-red-500 text-red-600 rounded-md hover:bg-red-50 font-medium transition duration-150" }, " + Dodaj nowy wpis edukacyjny")
         ),
@@ -685,9 +717,29 @@
         // CV Form (lewa strona)
         React.createElement(CvForm, { cvData: cvData, setCvData: setCvData }),
 
-        // CV Preview (prawa strona)
-        React.createElement('div', { id: "cv-preview-container", className: "p-6 md:p-10 flex justify-center bg-gray-100 flex-grow w-full md:w-1/2 lg:w-3/5 overflow-y-auto" },
-          React.createElement(CvPreview, { cvData: cvData, id: "cv-document", className: "w-[210mm] max-w-full h-auto min-h-fit" })
+        // CV Preview (prawa strona) - MODIFIED to include Toolbar
+        React.createElement('div', { id: "cv-preview-container", className: "bg-gray-100 flex-grow w-full md:w-1/2 lg:w-3/5 overflow-y-auto flex flex-col" },
+            // Toolbar
+            React.createElement('div', { className: "sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b p-3 flex justify-end gap-2 shadow-sm" },
+                React.createElement('button', { 
+                    onClick: () => window.open('https://wa.me/?text=' + encodeURIComponent('Cześć! Przesyłam moje CV.'), '_blank'),
+                    className: "flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white px-3 py-2 rounded text-xs md:text-sm font-medium transition shadow-sm" 
+                }, React.createElement(MessageIcon, { className: "w-4 h-4" }), "WhatsApp"),
+                
+                React.createElement('button', { 
+                    onClick: () => window.open('mailto:?subject=CV&body=' + encodeURIComponent('Cześć! Przesyłam moje CV.'), '_blank'),
+                    className: "flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-xs md:text-sm font-medium transition shadow-sm" 
+                }, React.createElement(MailIcon, { className: "w-4 h-4" }), "Email"),
+
+                React.createElement('button', { 
+                    onClick: () => generatePdf('cv-document'),
+                    className: "flex items-center gap-2 bg-[#E31D2A] hover:bg-[#c41924] text-white px-3 py-2 rounded text-xs md:text-sm font-medium transition shadow-sm" 
+                }, React.createElement(DownloadIcon, { className: "w-4 h-4" }), "Pobierz PDF")
+            ),
+            // Content Wrapper
+            React.createElement('div', { className: "p-6 md:p-10 flex justify-center" },
+                 React.createElement(CvPreview, { cvData: cvData, id: "cv-document", className: "w-[210mm] max-w-full h-auto min-h-fit" })
+            )
         )
       );
     };

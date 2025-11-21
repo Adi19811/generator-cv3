@@ -53,6 +53,9 @@
 
         return new Promise((resolve) => {
             const img = new Image();
+            // FIX: Enable CORS to prevent tainted canvas errors when using placeholder images
+            img.crossOrigin = "Anonymous";
+            
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = targetSize;
@@ -93,7 +96,12 @@
 
                 ctx.restore();
 
-                resolve(canvas.toDataURL('image/png'));
+                try {
+                    resolve(canvas.toDataURL('image/png'));
+                } catch (e) {
+                    console.error("Canvas tainted, returning original URL", e);
+                    resolve(imageUrl);
+                }
             };
             img.onerror = () => resolve(''); // Handle image loading errors
             img.src = imageUrl;
@@ -141,7 +149,8 @@
           logging: false,
           height: clone.scrollHeight,
           windowHeight: clone.scrollHeight,
-          scrollY: -window.scrollY
+          scrollY: -window.scrollY,
+          allowTaint: true // Allow tainted images to be drawn, though toDataURL might still fail if we don't use proxy/cors correctly. Prefer CORS.
         });
 
         const { jsPDF } = window.jspdf;
@@ -203,7 +212,17 @@
             0, 0, sourceWidthPx, heightToCopy_px
           );
 
-          const pageImgData = pageCanvas.toDataURL('image/png');
+          // Safe Data URL generation
+          let pageImgData;
+          try {
+             pageImgData = pageCanvas.toDataURL('image/png');
+          } catch (e) {
+             console.warn("Canvas tainted during PDF generation. Some images might be missing.", e);
+             // Fallback: If tainted, we might not be able to export. 
+             // We could try to catch this earlier, but usually useCORS:true prevents taint unless external non-CORS image.
+             throw new Error("Nie udało się wygenerować PDF z powodu zabezpieczeń przeglądarki dotyczących obrazków (CORS). Spróbuj użyć innych zdjęć.");
+          }
+
           const pageImgHeightMm = heightToCopy_px / pxPerMm;
           
           pdf.addImage(pageImgData, 'PNG', 0, currentTopMargin, a4Width, pageImgHeightMm);
@@ -220,6 +239,7 @@
         }
       } catch (error) {
         console.error("PDF generation failed", error);
+        alert("Błąd generowania PDF: " + (error.message || "Nieznany błąd"));
         throw error;
       } finally {
         document.body.removeChild(clone);

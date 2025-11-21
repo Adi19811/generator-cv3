@@ -291,8 +291,10 @@
       
       const headerHeight = 140;
       const profileImageSize = 150; // MODIFIED: Reduced size (was 180)
-      const profileImageTop = headerHeight - (profileImageSize / 2) + 20; // MODIFIED: Moved down by 20px
-      const mainPaddingTop = (profileImageSize / 2) + 20 + 24; // MODIFIED: Adjusted padding to match moved image
+      // ZMIANA: Przesunięcie zdjęcia w dół (zwiększony offset z +20 na +50)
+      const profileImageTop = headerHeight - (profileImageSize / 2) + 50; 
+      // ZMIANA: Dopasowanie paddingu do nowej pozycji zdjęcia
+      const mainPaddingTop = (profileImageSize / 2) + 50 + 24; 
 
       return React.createElement('div', { id: id, className: `${baseClasses} ${className}`, style: { fontFamily: "'Poppins', sans-serif" } },
         // MODIFIED HEADER

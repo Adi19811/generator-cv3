@@ -47,6 +47,104 @@
     // --- UTILS ---
     const generateUniqueId = () => new Date().getTime().toString() + Math.random().toString(36).substring(2, 9);
 
+    // --- TRANSLATIONS ---
+    const translations = {
+      pl: {
+        editorTitle: "Edytor CV",
+        basicInfo: "Dane Podstawowe",
+        fullName: "Imię i Nazwisko",
+        dob: "Data urodzenia",
+        profilePic: "Zdjęcie Profilowe",
+        workExp: "Doświadczenie Zawodowe",
+        workExpDesc: "Dodaj doświadczenie / edytuj doświadczenie",
+        addWorkExp: " + Dodaj nowe doświadczenie",
+        jobTitle: "Stanowisko",
+        company: "Firma",
+        period: "Okres (np. 01.2020 - 12.2023)",
+        responsibilities: "Zakres obowiązków (lista)",
+        dutyPlaceholder: "Obowiązek...",
+        addDuty: " + Dodaj obowiązek",
+        removeWorkExp: "Usuń to doświadczenie",
+        newWorkExp: "Nowe doświadczenie zawodowe",
+        qualifications: "Uprawnienia (np. Prawo Jazdy, SEP)",
+        qualPlaceholder: "Wózek widłowy...",
+        addQual: "+ Dodaj uprawnienie",
+        languages: "Znajomość Języków Obcych",
+        langPlaceholder: "Angielski B1",
+        addLang: "+ Dodaj język",
+        skills: "Dodatkowe Umiejętności",
+        skillPlaceholder: "Obsługa maszyn CNC",
+        addSkill: "+ Dodaj umiejętność",
+        education: "Edukacja",
+        eduDesc: "Dodaj szkołę / edytuj edukację",
+        addEdu: " + Dodaj nowy wpis edukacyjny",
+        degree: "Stopień/Kwalifikacja",
+        school: "Nazwa instytucji",
+        description: "Opis (opcjonalnie)",
+        descPlaceholder: "Krótki opis kierunku/szkoły...",
+        removeEdu: "Usuń tę edukację",
+        newEdu: "Nowa szkoła/kurs",
+        downloadPdf: "Pobierz CV jako PDF",
+        previewDob: "Data urodzenia",
+        previewQual: "Uprawnienia",
+        previewSkills: "Dodatkowe umiejętności",
+        previewLang: "Znajomość języków obcych",
+        previewExp: "Doświadczenie",
+        previewEdu: "Edukacja",
+        previewCV: "Curriculum vitae",
+        sectionQual: "Uprawnienia",
+        sectionLang: "Znajomość Języków Obcych",
+        sectionSkills: "Dodatkowe Umiejętności"
+      },
+      en: {
+        editorTitle: "CV Editor",
+        basicInfo: "Basic Information",
+        fullName: "Full Name",
+        dob: "Date of Birth",
+        profilePic: "Profile Picture",
+        workExp: "Work Experience",
+        workExpDesc: "Add experience / edit experience",
+        addWorkExp: " + Add new experience",
+        jobTitle: "Job Title",
+        company: "Company",
+        period: "Period (e.g. 01.2020 - 12.2023)",
+        responsibilities: "Responsibilities (list)",
+        dutyPlaceholder: "Duty...",
+        addDuty: " + Add duty",
+        removeWorkExp: "Remove this experience",
+        newWorkExp: "New Work Experience",
+        qualifications: "Qualifications (e.g. Licenses)",
+        qualPlaceholder: "License...",
+        addQual: "+ Add qualification",
+        languages: "Languages",
+        langPlaceholder: "English B1",
+        addLang: "+ Add language",
+        skills: "Additional Skills",
+        skillPlaceholder: "Skill...",
+        addSkill: "+ Add skill",
+        education: "Education",
+        eduDesc: "Add school / edit education",
+        addEdu: " + Add new education entry",
+        degree: "Degree/Qualification",
+        school: "Institution Name",
+        description: "Description (optional)",
+        descPlaceholder: "Short description...",
+        removeEdu: "Remove this education",
+        newEdu: "New School/Course",
+        downloadPdf: "Download CV as PDF",
+        previewDob: "Date of Birth",
+        previewQual: "Qualifications",
+        previewSkills: "Additional Skills",
+        previewLang: "Languages",
+        previewExp: "Experience",
+        previewEdu: "Education",
+        previewCV: "Curriculum Vitae",
+        sectionQual: "Qualifications",
+        sectionLang: "Languages",
+        sectionSkills: "Additional Skills"
+      }
+    };
+
     // --- SERVICES/PDFGENERATOR.TS ---
     const createPdf = async (elementId, outputType = 'save') => {
       const originalElement = document.getElementById(elementId);
@@ -223,17 +321,16 @@
     // --- COMPONENTS/CVPREVIEW.TSX ---
     const SectionTitle = ({ children }) => React.createElement('h2', { className: "text-[#E31D2A] text-lg tracking-[0.3em] font-semibold mb-6 uppercase" }, children);
 
-    const CvPreview = ({ cvData, id, className, onImagePositionChange }) => {
+    const CvPreview = ({ cvData, id, className, onImagePositionChange, lang = 'pl' }) => {
       // Use profilePictureUrl and CSS positioning
       const { name, profilePictureUrl, imagePosition, dob, personalDetails, skills, languages, workExperience, education } = cvData;
       const baseClasses = "bg-white text-black min-h-[297mm] shadow-2xl flex flex-col";
       
+      const t = translations[lang]; // Get translations based on lang
+
       const headerHeight = 140;
       const profileImageSize = 150; 
-      // ZMIANA: Przesunięcie zdjęcia w dół (zwiększony offset z +20 na +50)
       const profileImageTop = headerHeight - (profileImageSize / 2) + 50; 
-      
-      // ZMIANA: Osobne wyliczenie paddingu dla lewej kolumny
       const leftColumnPaddingTop = (profileImageSize / 2) + 50 - 20; 
 
       // --- DRAGGING LOGIC FOR IMAGE ---
@@ -341,23 +438,23 @@
             React.createElement('div', { className: "bg-gray-100 p-6 h-full" },
                 React.createElement('div', null,
                   dob && React.createElement('div', { className: "mb-6" },
-                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Data urodzenia"),
+                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, t.previewDob),
                     React.createElement('p', { className: "text-sm text-black font-normal break-words" }, dob)
                   ),
                   personalDetails && personalDetails.length > 0 && React.createElement('div', { className: "mb-6" },
-                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Uprawnienia"),
+                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, t.previewQual),
                     React.createElement('ul', { className: "list-disc pl-5 space-y-1" },
                       personalDetails.map(detail => React.createElement('li', { key: detail.id, className: "text-sm text-black font-normal break-words" }, detail.text))
                     )
                   ),
                   skills && skills.length > 0 && React.createElement('div', { className: "mb-6" },
-                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Dodatkowe umiejętności"),
+                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, t.previewSkills),
                     React.createElement('ul', { className: "list-disc pl-5 space-y-1" },
                       skills.map(skill => React.createElement('li', { key: skill.id, className: "text-sm text-black font-normal break-words" }, skill.text))
                     )
                   ),
                   languages && languages.length > 0 && React.createElement('div', null,
-                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, "Znajomość języków obcych"),
+                    React.createElement('h3', { className: "text-[#E31D2A] text-xs font-bold tracking-[0.15em] uppercase mb-1" }, t.previewLang),
                     React.createElement('ul', { className: "list-disc pl-5 space-y-1" },
                       languages.map(language => React.createElement('li', { key: language.id, className: "text-sm text-black font-normal break-words" }, language.text))
                     )
@@ -368,14 +465,13 @@
           // MODIFIED: Enforced desktop widths and order
           React.createElement('div', { className: "w-[62%] p-6 pr-10 pt-20 order-2 flex flex-col" },
             
-            // ZMIANA: Zmiana napisu na CURRICULUM VITAE i wyśrodkowanie
             React.createElement('div', { className: "w-full flex justify-center mb-6" },
-                React.createElement('div', { className: "text-4xl font-bold text-gray-300 tracking-widest uppercase select-none font-poppins text-center w-full" }, "Curriculum vitae")
+                React.createElement('div', { className: "text-4xl font-bold text-gray-300 tracking-widest uppercase select-none font-poppins text-center w-full" }, t.previewCV)
             ),
 
             React.createElement('div', null,
                 workExperience && workExperience.length > 0 && React.createElement(React.Fragment, null,
-                React.createElement(SectionTitle, null, "Doświadczenie"),
+                React.createElement(SectionTitle, null, t.previewExp),
                 workExperience.map((exp) => React.createElement('div', { key: exp.id, className: "mb-6" },
                   React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${exp.jobTitle}, ${exp.company}`),
                   React.createElement('p', { className: "text-xs text-black my-2" }, exp.dateRange),
@@ -385,7 +481,7 @@
                 ))
                 ),
                 education && education.length > 0 && React.createElement('div', { className: "mt-8" },
-                React.createElement(SectionTitle, null, "Edukacja"),
+                React.createElement(SectionTitle, null, t.previewEdu),
                 education.map((edu) => React.createElement('div', { key: edu.id, className: "mb-6" },
                   React.createElement('p', { className: "font-bold text-sm tracking-wide break-words uppercase" }, `${edu.degree}, ${edu.schoolName}`),
                   React.createElement('p', { className: "text-xs text-black my-2" }, edu.dateRange),
@@ -433,7 +529,9 @@
       );
     };
 
-    const CvForm = ({ cvData, setCvData }) => {
+    const CvForm = ({ cvData, setCvData, lang, setLang }) => {
+      const t = translations[lang];
+
       const handleFieldChange = (field, value) => {
         setCvData(prev => ({ ...prev, [field]: value }));
       };
@@ -521,64 +619,78 @@
         }));
       };
 
-      const renderWorkExperience = () => cvData.workExperience.map((work) => React.createElement(Section, { key: work.id, title: work.jobTitle || "Nowe doświadczenie zawodowe", defaultOpen: true },
-        React.createElement(Input, { label: "Stanowisko", value: work.jobTitle, onChange: (e) => handleDynamicChange('workExperience', work.id, 'jobTitle', e.target.value) }),
-        React.createElement(Input, { label: "Firma", value: work.company, onChange: (e) => handleDynamicChange('workExperience', work.id, 'company', e.target.value) }),
-        React.createElement(Input, { label: "Okres (np. 01.2020 - 12.2023)", value: work.dateRange, onChange: (e) => handleDynamicChange('workExperience', work.id, 'dateRange', e.target.value) }),
+      const renderWorkExperience = () => cvData.workExperience.map((work) => React.createElement(Section, { key: work.id, title: work.jobTitle || t.newWorkExp, defaultOpen: true },
+        React.createElement(Input, { label: t.jobTitle, value: work.jobTitle, onChange: (e) => handleDynamicChange('workExperience', work.id, 'jobTitle', e.target.value) }),
+        React.createElement(Input, { label: t.company, value: work.company, onChange: (e) => handleDynamicChange('workExperience', work.id, 'company', e.target.value) }),
+        React.createElement(Input, { label: t.period, value: work.dateRange, onChange: (e) => handleDynamicChange('workExperience', work.id, 'dateRange', e.target.value) }),
         React.createElement('div', { className: "mb-3" },
-          React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Zakres obowiązków (lista)"),
+          React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, t.responsibilities),
           work.tasks.map((task) => React.createElement('div', { key: task.id, className: "flex items-center space-x-2 mb-2" },
-            React.createElement('input', { type: "text", value: task.text, onChange: (e) => handleTaskChange(work.id, task.id, e.target.value), placeholder: "Obowiązek...", className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
+            React.createElement('input', { type: "text", value: task.text, onChange: (e) => handleTaskChange(work.id, task.id, e.target.value), placeholder: t.dutyPlaceholder, className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
             React.createElement('button', { type: "button", onClick: () => removeTask(work.id, task.id), className: "text-red-500 hover:text-red-700 text-lg p-1" }, "\u00D7")
           )),
-          React.createElement('button', { type: "button", onClick: () => addTask(work.id), className: "mt-2 text-xs text-blue-600 hover:text-blue-800" }, " + Dodaj obowiązek")
+          React.createElement('button', { type: "button", onClick: () => addTask(work.id), className: "mt-2 text-xs text-blue-600 hover:text-blue-800" }, t.addDuty)
         ),
-        React.createElement('button', { type: "button", onClick: () => removeItem('workExperience', work.id), className: "mt-4 text-xs text-red-600 hover:text-red-800" }, "Usuń to doświadczenie")
+        React.createElement('button', { type: "button", onClick: () => removeItem('workExperience', work.id), className: "mt-4 text-xs text-red-600 hover:text-red-800" }, t.removeWorkExp)
       ));
 
-      const renderEducation = () => cvData.education.map((edu) => React.createElement(Section, { key: edu.id, title: edu.degree || "Nowa szkoła/kurs", defaultOpen: true },
-        React.createElement(Input, { label: "Stopień/Kwalifikacja", value: edu.degree, onChange: (e) => handleDynamicChange('education', edu.id, 'degree', e.target.value) }),
-        React.createElement(Input, { label: "Nazwa instytucji", value: edu.schoolName, onChange: (e) => handleDynamicChange('education', edu.id, 'schoolName', e.target.value) }),
-        React.createElement(Input, { label: "Okres (np. 09.2015 - 06.2019)", value: edu.dateRange, onChange: (e) => handleDynamicChange('education', edu.id, 'dateRange', e.target.value) }),
+      const renderEducation = () => cvData.education.map((edu) => React.createElement(Section, { key: edu.id, title: edu.degree || t.newEdu, defaultOpen: true },
+        React.createElement(Input, { label: t.degree, value: edu.degree, onChange: (e) => handleDynamicChange('education', edu.id, 'degree', e.target.value) }),
+        React.createElement(Input, { label: t.school, value: edu.schoolName, onChange: (e) => handleDynamicChange('education', edu.id, 'schoolName', e.target.value) }),
+        React.createElement(Input, { label: t.period, value: edu.dateRange, onChange: (e) => handleDynamicChange('education', edu.id, 'dateRange', e.target.value) }),
         React.createElement('div', { className: "mb-3" },
-          React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Opis (opcjonalnie)"),
-          React.createElement('textarea', { value: edu.description, onChange: (e) => handleDynamicChange('education', edu.id, 'description', e.target.value), placeholder: "Krótki opis kierunku/szkoły...", className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500" })
+          React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, t.description),
+          React.createElement('textarea', { value: edu.description, onChange: (e) => handleDynamicChange('education', edu.id, 'description', e.target.value), placeholder: t.descPlaceholder, className: "w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-red-500 focus:border-red-500" })
         ),
-        React.createElement('button', { type: "button", onClick: () => removeItem('education', edu.id), className: "mt-4 text-xs text-red-600 hover:text-red-800" }, "Usuń tę edukację")
+        React.createElement('button', { type: "button", onClick: () => removeItem('education', edu.id), className: "mt-4 text-xs text-red-600 hover:text-red-800" }, t.removeEdu)
       ));
 
-      const renderSimpleList = (section, title, placeholder) => React.createElement(Section, { title: title, defaultOpen: false, description: "Rozwiń, aby edytować listę" },
+      const renderSimpleList = (section, title, placeholder, addText) => React.createElement(Section, { title: title, defaultOpen: false, description: "Rozwiń, aby edytować listę" },
         cvData[section].map((item) => React.createElement('div', { key: item.id, className: "flex items-center space-x-2 mb-2" },
           React.createElement('input', { type: "text", value: item.text, onChange: (e) => handleDynamicChange(section, item.id, 'text', e.target.value), placeholder: placeholder, className: "flex-grow border border-gray-300 rounded-md p-2 text-sm" }),
           React.createElement('button', { type: "button", onClick: () => removeItem(section, item.id), className: "text-red-500 hover:text-red-700 text-lg p-1" }, "\u00D7")
         )),
-        React.createElement('button', { type: "button", onClick: () => addItem(section), className: "mt-2 text-xs text-blue-600 hover:text-blue-800" }, `+ Dodaj ${title.toLowerCase().slice(0, -1)}`)
+        React.createElement('button', { type: "button", onClick: () => addItem(section), className: "mt-2 text-xs text-blue-600 hover:text-blue-800" }, addText)
       );
 
       return React.createElement('div', { id: "cv-form-container", className: "p-6 bg-white shadow-xl h-full overflow-y-auto w-full md:w-1/2 lg:w-2/5" },
-        React.createElement('h2', { className: "text-2xl font-bold text-red-700 mb-6" }, "Edytor CV"),
-        React.createElement(Section, { title: "Dane Podstawowe", defaultOpen: true },
-          React.createElement(Input, { label: "Imię i Nazwisko", value: cvData.name, onChange: (e) => handleFieldChange('name', e.target.value), placeholder: "Jan Kowalski" }),
-          React.createElement(Input, { label: "Data urodzenia", value: cvData.dob, onChange: (e) => handleFieldChange('dob', e.target.value), placeholder: "01.01.1990" }),
+        
+        // HEADER with Title and Lang Buttons
+        React.createElement('div', { className: "flex justify-between items-center mb-6" },
+            React.createElement('h2', { className: "text-2xl font-bold text-red-700" }, t.editorTitle),
+            React.createElement('div', { className: "flex gap-2" },
+                React.createElement('button', { 
+                    onClick: () => setLang('pl'),
+                    className: `px-3 py-1 text-sm font-medium rounded-md transition-colors border ${lang === 'pl' ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`
+                }, "PL"),
+                React.createElement('button', { 
+                    onClick: () => setLang('en'),
+                    className: `px-3 py-1 text-sm font-medium rounded-md transition-colors border ${lang === 'en' ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`
+                }, "EN")
+            )
+        ),
+
+        React.createElement(Section, { title: t.basicInfo, defaultOpen: true },
+          React.createElement(Input, { label: t.fullName, value: cvData.name, onChange: (e) => handleFieldChange('name', e.target.value), placeholder: "Jan Kowalski" }),
+          React.createElement(Input, { label: t.dob, value: cvData.dob, onChange: (e) => handleFieldChange('dob', e.target.value), placeholder: "01.01.1990" }),
           React.createElement('div', { className: "mb-3" },
-            React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, "Zdjęcie Profilowe"),
+            React.createElement('label', { className: "block text-sm font-medium text-gray-600 mb-1" }, t.profilePic),
             React.createElement('input', { type: "file", onChange: handleImageUpload, accept: "image/*", className: "w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" })
           )
-          // Removed ImageCropper here
         ),
         
-        React.createElement(Section, { title: "Doświadczenie Zawodowe", description: "Dodaj doświadczenie / edytuj doświadczenie", defaultOpen: false },
+        React.createElement(Section, { title: t.workExp, description: t.workExpDesc, defaultOpen: false },
           renderWorkExperience(),
-          React.createElement('button', { type: "button", onClick: () => addItem('workExperience'), className: "mt-4 w-full py-2 px-4 border border-red-500 text-red-600 rounded-md hover:bg-red-50 font-medium transition duration-150" }, " + Dodaj nowe doświadczenie")
+          React.createElement('button', { type: "button", onClick: () => addItem('workExperience'), className: "mt-4 w-full py-2 px-4 border border-red-500 text-red-600 rounded-md hover:bg-red-50 font-medium transition duration-150" }, t.addWorkExp)
         ),
         
-        renderSimpleList('personalDetails', 'Uprawnienia (np. Prawo Jazdy, SEP)', 'Wózek widłowy...'),
-        renderSimpleList('languages', 'Znajomość Języków Obcych', 'Angielski B1'),
-        renderSimpleList('skills', 'Dodatkowe Umiejętności', 'Obsługa maszyn CNC'),
+        renderSimpleList('personalDetails', t.sectionQual, t.qualPlaceholder, t.addQual),
+        renderSimpleList('languages', t.sectionLang, t.langPlaceholder, t.addLang),
+        renderSimpleList('skills', t.sectionSkills, t.skillPlaceholder, t.addSkill),
 
-        React.createElement(Section, { title: "Edukacja", description: "Dodaj szkołę / edytuj edukację", defaultOpen: false },
+        React.createElement(Section, { title: t.education, description: t.eduDesc, defaultOpen: false },
           renderEducation(),
-          React.createElement('button', { type: "button", onClick: () => addItem('education'), className: "mt-4 w-full py-2 px-4 border border-red-500 text-red-600 rounded-md hover:bg-red-50 font-medium transition duration-150" }, " + Dodaj nowy wpis edukacyjny")
+          React.createElement('button', { type: "button", onClick: () => addItem('education'), className: "mt-4 w-full py-2 px-4 border border-red-500 text-red-600 rounded-md hover:bg-red-50 font-medium transition duration-150" }, t.addEdu)
         ),
 
         React.createElement('div', { className: "mt-8 sticky bottom-0 bg-white pt-4 pb-4 border-t" },
@@ -586,7 +698,7 @@
             type: "button", 
             onClick: () => generatePdf('cv-document'), 
             className: "w-full bg-red-600 text-white py-3 rounded-lg font-semibold shadow-md hover:bg-red-700 transition duration-200" 
-          }, "Pobierz CV jako PDF")
+          }, t.downloadPdf)
         )
       );
     };
@@ -646,6 +758,7 @@
     const App = () => {
       const [cvData, setCvData] = useState(defaultData);
       const [view, setView] = useState('form'); // 'form' or 'preview'
+      const [lang, setLang] = useState('pl'); // 'pl' or 'en'
 
       // --- PINCH TO ZOOM LOGIC ---
       const [zoomLevel, setZoomLevel] = useState(1);
@@ -699,7 +812,7 @@
         ),
 
         // CV Form (lewa strona)
-        React.createElement(CvForm, { cvData: cvData, setCvData: setCvData }),
+        React.createElement(CvForm, { cvData: cvData, setCvData: setCvData, lang: lang, setLang: setLang }),
 
         // CV Preview (prawa strona)
         React.createElement('div', { 
@@ -742,7 +855,8 @@
                      cvData: cvData, 
                      id: "cv-document", 
                      className: "w-[210mm] h-auto min-h-fit",
-                     onImagePositionChange: handleImagePositionChange
+                     onImagePositionChange: handleImagePositionChange,
+                     lang: lang
                  })
             )
         )
